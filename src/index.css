@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --border-color: rgba(226, 232, 240, 0.8);
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --accent-blue: #0284c7;
+    --accent-indigo: #4f46e5;
+  }
+
+  .dark {
+    --bg-primary: #060913;
+    --bg-surface: #0a0f1d;
+    --bg-card: rgba(10, 15, 29, 0.75);
+    --border-color: rgba(30, 41, 59, 0.8);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-indigo: #818cf8;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism utilities */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+.glass-card-dark {
+  background: rgba(10, 15, 29, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.dark .glass-pill {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+/* Neumorphic soft depth utilities */
+.neu-inset {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.neu-button {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 4px 15px rgba(56, 189, 248, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.neu-button:active {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+/* Custom glow effects */
+.glow-blue {
+  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.3);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.25);
+}
+
+/* Subtle Rain Streaks Animation */
+@keyframes rainStreak {
+  0% {
+    transform: translateY(-80px) translateX(0);
+    opacity: 0.15;
+  }
+  70% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translateY(100vh) translateX(-25px);
+    opacity: 0;
+  }
+}
+
+.animate-rain-1 {
+  animation: rainStreak 2.4s linear infinite;
+}
+
+.animate-rain-2 {
+  animation: rainStreak 3.1s linear infinite 0.7s;
+}
+
+.animate-rain-3 {
+  animation: rainStreak 2.7s linear infinite 1.3s;
+}
+
+/* Distant Atmospheric Lightning Flash Glow */
+@keyframes distantLightning {
+  0%, 93%, 97%, 100% { opacity: 0; }
+  94% { opacity: 0.12; }
+  96% { opacity: 0.07; }
+}
+
+.animate-lightning-glow {
+  animation: distantLightning 11s ease-in-out infinite;
+}
+
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-rain-1, .animate-rain-2, .animate-rain-3, .animate-lightning-glow {
+    animation: none !important;
+  }
+}
+
+/* Grid overlay pattern */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+}
+
+/* Leaflet map custom styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  border-radius: 0.75rem;
+}
+
+.dark .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
