@@ -89,16 +89,16 @@ const ProtectedRoute = ({ children }) => {
 
 // Route Guard: Extension Officer Only Guard
 const OfficerRoute = ({ children }) => {
-  const { isAuthenticated, role, user } = useAuth();
-  const currentRole = role || user?.role;
-  const isOfficer = currentRole === 'officer' || currentRole === 'Officer';
+  const { isAuthenticated, user, role } = useAuth();
+  const currentRole = user?.role || role || 'farmer';
+  const isOfficer = String(currentRole).toLowerCase() === 'officer';
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   if (!isOfficer) {
-    return <Navigate to="/dashboard" replace state={{ authError: 'Extension Officer access required.' }} />;
+    return <Navigate to="/farmer-dashboard" replace state={{ authError: 'Extension Officer access required.' }} />;
   }
 
   return (
@@ -106,6 +106,19 @@ const OfficerRoute = ({ children }) => {
       <DashboardLayout>{children}</DashboardLayout>
     </ErrorBoundary>
   );
+};
+
+// Role-Based Smart Router for /dashboard root
+const RoleBasedDashboardRoute = () => {
+  const { isAuthenticated, user, role } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  const currentRole = user?.role || role || 'farmer';
+  if (String(currentRole).toLowerCase() === 'officer') {
+    return <Navigate to="/officer-dashboard" replace />;
+  }
+  return <Navigate to="/farmer-dashboard" replace />;
 };
 
 // Main Layout Wrapper for Public Pages
@@ -142,7 +155,7 @@ const AnimatedRoutes = () => {
           <Route path="/register" element={<Register />} />
 
           {/* Protected Application Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<RoleBasedDashboardRoute />} />
           <Route path="/advisory" element={<ProtectedRoute><Advisory /></ProtectedRoute>} />
           <Route path="/risk-map" element={<ProtectedRoute><RiskMap /></ProtectedRoute>} />
           <Route path="/farmer-dashboard" element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />

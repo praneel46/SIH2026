@@ -15,7 +15,7 @@ import {
   Cpu, 
   Globe 
 } from 'lucide-react';
-import { downloadPdfReport } from '../../utils/reportGenerator';
+import { generateClimateReport } from '../../utils/reportGenerator';
 
 export const ReportPreviewModal = ({ isOpen, onClose, location = {}, crop = {}, predictionData = null }) => {
   const [downloading, setDownloading] = useState(false);
@@ -44,7 +44,7 @@ export const ReportPreviewModal = ({ isOpen, onClose, location = {}, crop = {}, 
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      await downloadPdfReport('varsha-setu-report-container', districtName, cropName);
+      generateClimateReport(location, crop, predictionData);
     } catch (err) {
       console.error('PDF download error:', err);
     } finally {

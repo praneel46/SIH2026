@@ -4,7 +4,16 @@ import { mockCrops } from '../data/mock/mockCrops';
 const RoleContext = createContext();
 
 export const RoleProvider = ({ children }) => {
-  const [role, setRole] = useState('Officer'); // Default: Agricultural Officer
+  const [role, setRole] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('weather_index_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.role) return parsed.role;
+      }
+    } catch {}
+    return 'farmer'; // SAFE DEFAULT: 'farmer'
+  });
   
   // Central application location state with full administrative hierarchy
   const [selectedLocation, setSelectedLocation] = useState({
