@@ -1,0 +1,82 @@
+{
+  "ragi": {
+    "display_name_en": "Ragi (Finger Millet)",
+    "display_name_kn": "ರಾಗಿ",
+    "scientific_name": "Eleusine coracana",
+    "kc_initial": 0.3,
+    "kc_mid": 1.0,
+    "kc_end": 0.3,
+    "stage_length_days": {
+      "initial": 20,
+      "development": 30,
+      "mid_season": 40,
+      "late_season": 25
+    },
+    "total_season_days": 115,
+    "source_note": "FAO-56 Table 12, matched under 'Millet' (Small Grains / Cereals); stage lengths from FAO-56 Table 11 for semi-arid tropical millet."
+  },
+  "maize": {
+    "display_name_en": "Maize (Field Corn)",
+    "display_name_kn": "ಮೆಕ್ಕೆಜೋಳ",
+    "scientific_name": "Zea mays",
+    "kc_initial": 0.3,
+    "kc_mid": 1.2,
+    "kc_end": 0.6,
+    "stage_length_days": {
+      "initial": 20,
+      "development": 35,
+      "mid_season": 40,
+      "late_season": 30
+    },
+    "total_season_days": 125,
+    "source_note": "FAO-56 Table 12, exact match under 'Maize (grain)'; stage lengths from FAO-56 Table 11 (warm/tropical grain maize)."
+  },
+  "jowar": {
+    "display_name_en": "Jowar (Sorghum)",
+    "display_name_kn": "ಜೋಳ",
+    "scientific_name": "Sorghum bicolor",
+    "kc_initial": 0.3,
+    "kc_mid": 1.0,
+    "kc_end": 0.55,
+    "stage_length_days": {
+      "initial": 20,
+      "development": 30,
+      "mid_season": 40,
+      "late_season": 30
+    },
+    "total_season_days": 120,
+    "source_note": "FAO-56 Table 12, exact match under 'Sorghum (grain)'; stage lengths from FAO-56 Table 11."
+  },
+  "groundnut": {
+    "display_name_en": "Groundnut (Peanut)",
+    "display_name_kn": "ಕಡಲೆಕಾಯಿ",
+    "scientific_name": "Arachis hypogaea",
+    "kc_initial": 0.4,
+    "kc_mid": 1.15,
+    "kc_end": 0.6,
+    "stage_length_days": {
+      "initial": 25,
+      "development": 35,
+      "mid_season": 45,
+      "late_season": 25
+    },
+    "total_season_days": 130,
+    "source_note": "FAO-56 Table 12, exact match under 'Groundnut (Peanut)'; stage lengths from FAO-56 Table 11."
+  },
+  "cotton": {
+    "display_name_en": "Cotton",
+    "display_name_kn": "ಹತ್ತಿ",
+    "scientific_name": "Gossypium hirsutum",
+    "kc_initial": 0.35,
+    "kc_mid": 1.15,
+    "kc_end": 0.65,
+    "stage_length_days": {
+      "initial": 30,
+      "development": 50,
+      "mid_season": 60,
+      "late_season": 40
+    },
+    "total_season_days": 180,
+    "source_note": "FAO-56 Table 12, exact match under 'Cotton'; stage lengths from FAO-56 Table 11."
+  }
+}

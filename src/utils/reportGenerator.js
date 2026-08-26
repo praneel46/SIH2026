@@ -201,12 +201,12 @@ export function generateClimateReport(location = {}, crop = {}, predictionData =
   doc.text('-23.2 mm (Evapotranspiration > Effective Rainfall)', 80, y + 13);
   doc.text('23.2 mm (Supplemental Water Needed)', 80, y + 20);
 
-  // 5. BILINGUAL AGRONOMIC ADVISORY
+  // 5. AGRONOMIC ADVISORY
   y += 32;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(15, 23, 42);
-  doc.text('3. BILINGUAL AGRONOMIC & MANAGEMENT ADVISORY', 12, y);
+  doc.text('3. AGRONOMIC & MANAGEMENT ADVISORY', 12, y);
 
   doc.setDrawColor(148, 163, 184);
   doc.setLineWidth(0.4);
@@ -216,14 +216,14 @@ export function generateClimateReport(location = {}, crop = {}, predictionData =
 
   // English Advisory Box
   doc.setFillColor(248, 250, 252);
-  doc.rect(12, y, 186, 24, 'F');
+  doc.rect(12, y, 186, 26, 'F');
   doc.setDrawColor(203, 213, 225);
-  doc.rect(12, y, 186, 24, 'S');
+  doc.rect(12, y, 186, 26, 'S');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(14, 116, 144);
-  doc.text('English Agronomic Guidance:', 16, y + 6);
+  doc.text('Agronomic Guidance:', 16, y + 6);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
@@ -231,27 +231,8 @@ export function generateClimateReport(location = {}, crop = {}, predictionData =
   const wrappedEn = doc.splitTextToSize(advisoryEn, 178);
   doc.text(wrappedEn, 16, y + 12);
 
-  y += 28;
-
-  // Kannada Advisory Box
-  doc.setFillColor(248, 250, 252);
-  doc.rect(12, y, 186, 22, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.rect(12, y, 186, 22, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(4, 120, 87);
-  doc.text('Kannada Agronomic Guidance:', 16, y + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(30, 41, 59);
-  const wrappedKn = doc.splitTextToSize(advisoryKn, 178);
-  doc.text(wrappedKn, 16, y + 12);
-
-  // 6. TECHNICAL DATA PROVENANCE
-  y += 26;
+  // 6. TECHNICAL DATA PROVENANCE (Shifted Upwards Cleanly)
+  y += 32;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(15, 23, 42);

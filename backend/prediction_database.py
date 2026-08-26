@@ -53,7 +53,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def _resolve_db_path() -> str:
-    db_in_folder = os.path.join(BASE_DIR, "backend", "database", "monsoon_predictions.db")
+    db_in_folder = os.path.join(BASE_DIR, "database", "monsoon_predictions.db")
     if os.path.exists(db_in_folder):
         return db_in_folder
     db_in_base = os.path.join(BASE_DIR, "monsoon_predictions.db")
