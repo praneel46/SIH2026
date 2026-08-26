@@ -41,8 +41,8 @@ export const OfficerDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Live call to trigger-ensemble-check (GFS/ICON/ECMWF + FAO-56 + DB log)
-      const res = await apiService.getEnsembleCheck({
+      // 1. Fast call to latest-ensemble-check (< 20ms cached / DB result)
+      const res = await apiService.getLatestEnsemble({
         latitude: selectedLocation.lat || 13.29,
         longitude: selectedLocation.lon || 77.55,
         crop_type: selectedCrop?.key || 'ragi',
@@ -54,7 +54,7 @@ export const OfficerDashboard = () => {
       if (res.success && res.data) {
         setEnsembleData(res.data);
       } else {
-        setError(res.error || 'Failed to trigger multi-model ensemble check');
+        setError(res.error || 'Failed to retrieve multi-model ensemble intelligence');
       }
     } catch (err) {
       console.error('Officer Ensemble Error:', err);

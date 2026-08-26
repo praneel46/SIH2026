@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # prediction_database.py -- SQLite Database Layer for Monsoon Prediction Logging
 # SIH26086: Weather Index Climate Intelligence Platform
 #
@@ -97,6 +97,11 @@ def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
             cursor.execute("ALTER TABLE predictions_log ADD COLUMN spread_mm REAL")
         if "model_agreement" not in existing_cols:
             cursor.execute("ALTER TABLE predictions_log ADD COLUMN model_agreement TEXT")
+
+        # Create performance indexes for instant query execution
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_predictions_district ON predictions_log(district)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_predictions_id_desc ON predictions_log(id DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_predictions_risk ON predictions_log(risk_category)")
 
         conn.commit()
     finally:

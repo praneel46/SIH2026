@@ -76,15 +76,18 @@ export const RiskMap = () => {
   const [filterRisk, setFilterRisk] = useState('ALL');
   const [loading, setLoading] = useState(true);
 
-  // Parallel fetch: query POST /api/v1/predict-monsoon with caching for instant rendering
+  // Fast single-endpoint fetch: query GET /api/v1/risk-map with client caching
   const fetchAllDistrictRisks = async () => {
-    const cacheKey = `wi_risk_map_${selectedCrop?.key || 'ragi'}`;
+    const cropKey = selectedCrop?.key || 'ragi';
+    const cacheKey = `wi_risk_map_${cropKey}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         if (parsed && parsed.length > 0) {
           setDistrictData(parsed);
+          const match = parsed.find(r => (r.name || r.district || '').toLowerCase() === (selectedLocation.district || '').toLowerCase()) || parsed[0];
+          setActiveDistrict(match);
           setLoading(false);
         }
       } catch {}
@@ -93,65 +96,27 @@ export const RiskMap = () => {
     }
 
     try {
-      const results = await Promise.all(
-        KARNATAKA_DISTRICTS.map(async (dist) => {
-          try {
-            const res = await apiService.evaluatePrediction({
-              latitude: dist.lat,
-              longitude: dist.lon,
-              month: new Date().getMonth() + 1,
-              crop_type: selectedCrop?.key || 'ragi',
-              dmi: CURRENT_CYCLE_INDICES.dmi,
-              oni: CURRENT_CYCLE_INDICES.oni,
-              mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
-              mjo_amplitude: CURRENT_CYCLE_INDICES.mjo_amplitude
-            });
-
-            if (res.success && res.data) {
-              const d = res.data;
-              return {
-                id: dist.id,
-                name: dist.name,
-                lat: dist.lat,
-                lon: dist.lon,
-                riskCategory: d.riskCategory || 'NORMAL',
-                predictedMonthlyRainfall: d.predictedMonthlyRainfall ?? 85.0,
-                forecast14DayRainfall: d.forecast14DayRainfall ?? 22.0,
-                historicalBaseline: d.historicalBaseline ?? 110.0,
-                deviationPct: d.deviationPct ?? -15.0,
-                drySpellWarning: d.drySpellWarning ?? false,
-                advisory_en: d.advisory?.english || 'Standard seasonal practices recommended.',
-                advisory_kn: d.advisory?.kannada || 'ಸಾಮಾನ್ಯ ಬಿತ್ತನೆ ಮತ್ತು ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಮುಂದುವರಿಸಿ.'
-              };
-            }
-          } catch (e) {
-            console.warn(`Fallback for district ${dist.name}:`, e);
-          }
-
-          return {
-            id: dist.id,
-            name: dist.name,
-            lat: dist.lat,
-            lon: dist.lon,
-            riskCategory: 'NORMAL',
-            predictedMonthlyRainfall: 116.5,
-            forecast14DayRainfall: 21.2,
-            historicalBaseline: 137.1,
-            deviationPct: -15.0,
-            drySpellWarning: false,
-            advisory_en: 'Seasonal crop guidance active.',
-            advisory_kn: 'ಋತುಮಾನದ ಬೆಳೆ ಸಲಹೆ ಸಕ್ರಿಯವಾಗಿದೆ.'
-          };
-        })
-      );
-
-      const validResults = results.filter(Boolean);
-      setDistrictData(validResults);
-      sessionStorage.setItem(cacheKey, JSON.stringify(validResults));
-
-      // Match with current global selectedLocation or default to Bengaluru Rural
-      const initialMatch = validResults.find(r => r.name.toLowerCase() === (selectedLocation.district || '').toLowerCase()) || validResults[0];
-      setActiveDistrict(initialMatch);
+      const res = await apiService.getRiskMap(cropKey);
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const mappedList = res.data.map(item => ({
+          id: item.id || item.district?.toLowerCase().replace(/ /g, '_'),
+          name: item.district || item.name,
+          lat: item.lat || item.latitude,
+          lon: item.lng || item.lon || item.longitude,
+          riskCategory: item.riskCategory || item.riskLevel || 'NORMAL',
+          predictedMonthlyRainfall: item.rainfallMm ?? item.predictedMonthlyRainfall ?? 116.5,
+          forecast14DayRainfall: item.forecast14DayRainfall ?? 25.0,
+          historicalBaseline: item.normalBaseline ?? item.historicalBaseline ?? 120.0,
+          deviationPct: item.deviationPct ?? 0.0,
+          drySpellWarning: item.drySpellWarning ?? false,
+          advisory_en: item.advisoryEn || item.advisory_en || 'Seasonal crop guidance active.',
+          advisory_kn: item.advisoryKn || item.advisory_kn || 'ಋತುಮಾನದ ಬೆಳೆ ಸಲಹೆ ಸಕ್ರಿಯವಾಗಿದೆ.'
+        }));
+        setDistrictData(mappedList);
+        sessionStorage.setItem(cacheKey, JSON.stringify(mappedList));
+        const initialMatch = mappedList.find(r => r.name.toLowerCase() === (selectedLocation.district || '').toLowerCase()) || mappedList[0];
+        setActiveDistrict(initialMatch);
+      }
     } catch (err) {
       console.error('Failed to load multi-district risk map:', err);
     } finally {
