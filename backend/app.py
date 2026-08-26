@@ -35,10 +35,18 @@ import csv
 import math
 
 import os
+import sys
 import time
 import threading
 
-import prediction_database as db
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+try:
+    import prediction_database as db
+except ImportError:
+    from backend import prediction_database as db
 
 # ==============================================================================
 # IN-MEMORY TTL CACHE & SINGLE-FLIGHT REQUEST DEDUPLICATION
