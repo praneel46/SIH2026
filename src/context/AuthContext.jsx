@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const savedAuth = localStorage.getItem('weather_index_auth');
-    return savedAuth === 'true'; // Default true if previously logged in
+    return savedAuth !== 'false'; // Default true so demo pages open immediately without blank screen/unexpected redirect
   });
 
   const login = (email, password) => {
