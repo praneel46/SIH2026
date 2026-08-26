@@ -1,128 +1,536 @@
-import { mockPredictions, mockAnomalyTrends } from '../data/mock/mockPredictions';
-import { mockClimateSignals } from '../data/mock/mockClimateSignals';
-import { mockRiskData } from '../data/mock/mockRiskData';
-import { mockAdvisories } from '../data/mock/mockAdvisories';
-import { mockCrops } from '../data/mock/mockCrops';
-import { mockLocations } from '../data/mock/mockLocations';
+import {
+  mockPredictions,
+  mockAnomalyTrends
+} from '../data/mock/mockPredictions';
 
-// Helper to simulate asynchronous Spring Boot REST response
-const delay = (ms = 400) => new Promise(resolve => setTimeout(resolve, ms));
+import {
+  mockClimateSignals
+} from '../data/mock/mockClimateSignals';
+
+import {
+  mockRiskData
+} from '../data/mock/mockRiskData';
+
+import {
+  mockAdvisories
+} from '../data/mock/mockAdvisories';
+
+import {
+  mockCrops
+} from '../data/mock/mockCrops';
+
+import {
+  mockLocations
+} from '../data/mock/mockLocations';
+
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+// FastAPI backend URL
+const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+
+// ============================================================
+// HELPER
+// ============================================================
+
+// Simulate delay only for mock APIs
+const delay = (ms = 400) =>
+  new Promise(resolve => setTimeout(resolve, ms));
+
+
+// ============================================================
+// API SERVICE
+// ============================================================
 
 export const apiService = {
-  // 1. Fetch latest prediction
+
+  // ==========================================================
+  // 1. FETCH LATEST PREDICTION
+  // ==========================================================
+
   async getLatestPrediction() {
     await delay(350);
+
     return {
       success: true,
       data: mockPredictions[0]
     };
   },
 
-  // 2. Simulate ML Prediction Execution (Emulates Spring Boot -> FastAPI TFLite inference)
+
+  // ==========================================================
+  // 2. REAL ML PREDICTION
+  //
+  // React
+  //    ↓
+  // FastAPI
+  //    ↓
+  // TensorFlow Lite Model
+  //    ↓
+  // Open-Meteo Forecast
+  //    ↓
+  // Prediction + Risk + Advisory
+  // ==========================================================
+
   async evaluatePrediction(inputFeatures) {
-    await delay(800); // Realistic ML inference delay
 
-    const dmi = parseFloat(inputFeatures.dmi ?? 0.42);
-    const dmi_lag1 = parseFloat(inputFeatures.dmi_lag1 ?? 0.35);
-    const dmi_lag2 = parseFloat(inputFeatures.dmi_lag2 ?? 0.28);
-    const month = parseInt(inputFeatures.month ?? 8, 10);
+    try {
 
-    // StandardScaler parameters from training:
-    // mean  = [-0.2476, -0.2483, -0.2485, 0.00079, -0.00079]
-    // scale = [0.3349, 0.3352, 0.3350, 0.7077, 0.7066]
+      const payload = {
 
-    const month_sin = Math.sin((2 * Math.PI * month) / 12);
-    const month_cos = Math.cos((2 * Math.PI * month) / 12);
+        // Location
+        latitude: Number(
+          inputFeatures.latitude ?? 13.29
+        ),
 
-    const scaled_dmi = (dmi - (-0.2476)) / 0.3349;
-    const scaled_lag1 = (dmi_lag1 - (-0.2483)) / 0.3352;
-    const scaled_lag2 = (dmi_lag2 - (-0.2485)) / 0.3350;
-    const scaled_sin = (month_sin - 0.00079) / 0.7077;
-    const scaled_cos = (month_cos - (-0.00079)) / 0.7066;
+        longitude: Number(
+          inputFeatures.longitude ?? 77.55
+        ),
 
-    // Emulate prototype regression weights (underfitting around mean)
-    const simulatedAnomaly = parseFloat((-14.5 + dmi * 12.0 - dmi_lag1 * 6.5).toFixed(1));
+        // Current month
+        month: Number(
+          inputFeatures.month ??
+          new Date().getMonth() + 1
+        ),
 
-    let riskCategory = "NORMAL";
-    let colorCode = "#22C55E";
-    let breakPhaseRisk = "LOW";
+        // Crop
+        crop_type:
+          inputFeatures.crop_type ??
+          inputFeatures.cropType ??
+          'ragi',
 
-    if (simulatedAnomaly <= -20) {
-      riskCategory = "BREAK_RISK";
-      colorCode = "#EF4444";
-      breakPhaseRisk = "CRITICAL";
-    } else if (simulatedAnomaly < -5) {
-      riskCategory = "BELOW_NORMAL";
-      colorCode = "#EAB308";
-      breakPhaseRisk = "MEDIUM";
-    } else if (simulatedAnomaly > 10) {
-      riskCategory = "ABOVE_NORMAL";
-      colorCode = "#3B82F6";
-      breakPhaseRisk = "LOW";
+        // Climate signals
+        dmi: Number(
+          inputFeatures.dmi ?? 0
+        ),
+
+        oni: Number(
+          inputFeatures.oni ?? 0
+        ),
+
+        mjo_phase: Number(
+          inputFeatures.mjo_phase ??
+          inputFeatures.mjoPhase ??
+          1
+        ),
+
+        mjo_amplitude: Number(
+          inputFeatures.mjo_amplitude ??
+          inputFeatures.mjoAmplitude ??
+          1
+        )
+      };
+
+
+      console.log(
+        'Sending prediction request:',
+        payload
+      );
+
+
+      const response = await fetch(
+        `${API_BASE_URL}/predict-monsoon`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json'
+          },
+
+          body: JSON.stringify(payload)
+        }
+      );
+
+
+      // Handle backend errors
+      if (!response.ok) {
+
+        let errorMessage =
+          'Prediction service failed';
+
+        try {
+
+          const errorData =
+            await response.json();
+
+          errorMessage =
+            errorData.detail ||
+            errorData.message ||
+            errorMessage;
+
+        } catch {
+          // Ignore JSON parsing error
+        }
+
+        throw new Error(errorMessage);
+      }
+
+
+      // Get real backend result
+      const result =
+        await response.json();
+
+
+      console.log(
+        'Prediction response:',
+        result
+      );
+
+
+      // ======================================================
+      // CONVERT FASTAPI RESPONSE
+      // INTO FRONTEND-FRIENDLY FORMAT
+      // ======================================================
+
+      const predictedRainfall =
+        result.forecast
+          ?.predicted_monthly_rainfall_mm ?? 0;
+
+      const forecast14Day =
+        result.forecast
+          ?.['14_day_forecast_mm'] ?? 0;
+
+      const riskLevel =
+        result.risk_assessment
+          ?.risk_level ?? 'LOW';
+
+      const drySpellWarning =
+        result.risk_assessment
+          ?.dry_spell_warning ?? false;
+
+
+      // Risk category for UI
+      let riskCategory = 'NORMAL';
+      let colorCode = '#22C55E';
+      let breakPhaseRisk = 'LOW';
+
+
+      if (
+        riskLevel === 'HIGH' ||
+        drySpellWarning
+      ) {
+
+        riskCategory = 'BREAK_RISK';
+        colorCode = '#EF4444';
+        breakPhaseRisk = 'CRITICAL';
+
+      } else if (
+        riskLevel === 'MEDIUM'
+      ) {
+
+        riskCategory = 'BELOW_NORMAL';
+        colorCode = '#EAB308';
+        breakPhaseRisk = 'MEDIUM';
+
+      }
+
+
+      // ======================================================
+      // RETURN DATA
+      // ======================================================
+
+      return {
+
+        success: true,
+
+        data: {
+
+          predictionId:
+            `PRED-${Date.now()}`,
+
+          timestamp:
+            new Date().toISOString(),
+
+
+          // Location
+          location:
+            result.location ?? {
+              latitude: payload.latitude,
+              longitude: payload.longitude
+            },
+
+
+          // Rainfall prediction
+          predictedMonthlyRainfall:
+            predictedRainfall,
+
+          forecast14DayRainfall:
+            forecast14Day,
+
+
+          // Compatibility with older UI
+          rainfallAnomaly:
+            predictedRainfall,
+
+          unit: 'mm',
+
+
+          // Risk
+          riskCategory,
+          colorCode,
+          breakPhaseRisk,
+
+          drySpellWarning,
+          riskLevel,
+
+
+          // Advisory
+          advisory: {
+            crop:
+              result.agronomic_advisory
+                ?.crop ??
+              payload.crop_type,
+
+            english:
+              result.agronomic_advisory
+                ?.advisory_en ??
+              '',
+
+            kannada:
+              result.agronomic_advisory
+                ?.advisory_kn ??
+              ''
+          },
+
+
+          // Original climate inputs
+          inputs: {
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            month: payload.month,
+            crop_type: payload.crop_type,
+            dmi: payload.dmi,
+            oni: payload.oni,
+            mjo_phase: payload.mjo_phase,
+            mjo_amplitude:
+              payload.mjo_amplitude
+          },
+
+
+          // Model metadata
+          modelMetadata: {
+            modelType:
+              'TensorFlow Lite Monsoon Prediction Model',
+
+            inference:
+              'FastAPI Backend',
+
+            features: [
+              'latitude',
+              'longitude',
+              'month',
+              'DMI',
+              'ONI',
+              'MJO Phase',
+              'MJO Amplitude'
+            ],
+
+            forecastSource:
+              'Open-Meteo',
+
+            note:
+              'Prediction generated using the deployed TensorFlow Lite model and weather forecast integration.'
+          },
+
+
+          // Preserve complete backend response
+          rawResponse: result
+        }
+      };
+
+
+    } catch (error) {
+
+      console.error(
+        'Prediction API Error:',
+        error
+      );
+
+
+      return {
+
+        success: false,
+
+        error:
+          error.message ||
+          'Unable to connect to the prediction server.',
+
+        data: null
+      };
     }
+  },
+
+
+  // ==========================================================
+  // 3. FETCH CLIMATE SIGNALS
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
+  async getClimateSignals() {
+
+    await delay(300);
 
     return {
       success: true,
-      data: {
-        predictionId: `PRED-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        rainfallAnomaly: simulatedAnomaly,
-        unit: "mm (estimated deviation)",
-        riskCategory,
-        colorCode,
-        breakPhaseRisk,
-        inputs: { dmi, dmi_lag1, dmi_lag2, month, month_sin, month_cos },
-        scaledInputs: [scaled_dmi, scaled_lag1, scaled_lag2, scaled_sin, scaled_cos],
-        modelMetadata: {
-          modelType: "TensorFlow Lite Prototype (Sequential)",
-          inputShape: "[1, 5]",
-          scaler: "z-score (StandardScaler)",
-          note: "Regional signal inference. Spatial features pending retraining."
-        }
-      }
+      data: mockClimateSignals
     };
   },
 
-  // 3. Fetch Climate Signals
-  async getClimateSignals() {
-    await delay(300);
-    return { success: true, data: mockClimateSignals };
-  },
 
-  // 4. Fetch Risk Map Polygons
+  // ==========================================================
+  // 4. FETCH RISK MAP DATA
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
   async getRiskMapData() {
+
     await delay(400);
-    return { success: true, data: mockRiskData };
+
+    return {
+      success: true,
+      data: mockRiskData
+    };
   },
 
-  // 5. Fetch Advisories
-  async getAdvisories(cropId = null, riskCategory = null) {
+
+  // ==========================================================
+  // 5. FETCH ADVISORIES
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
+  async getAdvisories(
+    cropId = null,
+    riskCategory = null
+  ) {
+
     await delay(300);
-    let filtered = [...mockAdvisories];
+
+    let filtered =
+      [...mockAdvisories];
+
+
     if (cropId) {
-      filtered = filtered.filter(a => a.cropId === cropId);
+
+      filtered =
+        filtered.filter(
+          advisory =>
+            advisory.cropId === cropId
+        );
     }
+
+
     if (riskCategory) {
-      filtered = filtered.filter(a => a.riskCategory === riskCategory);
+
+      filtered =
+        filtered.filter(
+          advisory =>
+            advisory.riskCategory ===
+            riskCategory
+        );
     }
-    return { success: true, data: filtered };
+
+
+    return {
+      success: true,
+      data: filtered
+    };
   },
 
-  // 6. Fetch Crops
+
+  // ==========================================================
+  // 6. FETCH CROPS
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
   async getCrops() {
+
     await delay(200);
-    return { success: true, data: mockCrops };
+
+    return {
+      success: true,
+      data: mockCrops
+    };
   },
 
-  // 7. Fetch Locations
+
+  // ==========================================================
+  // 7. FETCH LOCATIONS
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
   async getLocations() {
+
     await delay(200);
-    return { success: true, data: mockLocations };
+
+    return {
+      success: true,
+      data: mockLocations
+    };
   },
 
-  // 8. Fetch Anomaly Trends
+
+  // ==========================================================
+  // 8. FETCH ANOMALY TRENDS
+  // ==========================================================
+  // MOCK DATA - not yet connected to backend, see README
   async getAnomalyTrends() {
+
     await delay(300);
-    return { success: true, data: mockAnomalyTrends };
+
+    return {
+      success: true,
+      data: mockAnomalyTrends
+    };
+  },
+
+
+  // ==========================================================
+  // 9. MANUALLY TRIGGER DAILY MONSOON CHECK
+  //
+  // Useful for demo/testing
+  // ==========================================================
+
+  async triggerDailyCheck() {
+
+    try {
+
+      const response =
+        await fetch(
+          `${API_BASE_URL}/trigger-daily-check`,
+          {
+            method: 'POST'
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          'Unable to trigger daily monsoon check'
+        );
+      }
+
+
+      const result =
+        await response.json();
+
+
+      return {
+        success: true,
+        data: result
+      };
+
+
+    } catch (error) {
+
+      console.error(
+        'Daily check error:',
+        error
+      );
+
+
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 };

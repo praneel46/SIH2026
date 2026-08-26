@@ -133,3 +133,19 @@ dist-ssr
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.sih_env/
+
+# SQLite databases
+*.db
+*.sqlite3
+

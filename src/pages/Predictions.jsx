@@ -178,17 +178,32 @@ export const Predictions = () => {
                   <p className="text-xs text-slate-500">Unit: {result.unit}</p>
                 </div>
 
-                {/* Scaled Input Vector Inspection */}
+                {/* Input Vector Inspection */}
                 <div className="p-4 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-2 font-mono text-[11px]">
-                  <span className="block text-[10px] uppercase text-sky-400 font-bold">StandardScaler Normalized Vector Z = (X - μ) / σ</span>
-                  <div className="grid grid-cols-5 gap-1 text-center py-1">
-                    {result.scaledInputs.map((val, idx) => (
-                      <div key={idx} className="p-1 rounded bg-slate-800 border border-slate-700">
-                        <span className="block text-[9px] text-slate-400">f[{idx}]</span>
-                        <span className="font-bold text-sky-300">{val.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className="block text-[10px] uppercase text-sky-400 font-bold">Model Input Features Vector</span>
+                  {result.inputs ? (
+                    <div className="grid grid-cols-4 gap-1 text-center py-1">
+                      {Object.entries(result.inputs).map(([key, val]) => (
+                        <div key={key} className="p-1 rounded bg-slate-800 border border-slate-700">
+                          <span className="block text-[9px] text-slate-400 truncate">{key}</span>
+                          <span className="font-bold text-sky-300">
+                            {typeof val === 'number' ? val.toFixed(2) : String(val)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : result.scaledInputs ? (
+                    <div className="grid grid-cols-5 gap-1 text-center py-1">
+                      {result.scaledInputs.map((val, idx) => (
+                        <div key={idx} className="p-1 rounded bg-slate-800 border border-slate-700">
+                          <span className="block text-[9px] text-slate-400">f[{idx}]</span>
+                          <span className="font-bold text-sky-300">{val.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-slate-400 py-2 text-[10px]">No input vector data available</p>
+                  )}
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-700 dark:text-sky-300 leading-relaxed">
