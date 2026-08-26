@@ -24,7 +24,8 @@ import {
   Map, 
   TrendingUp, 
   BrainCircuit,
-  Sparkles 
+  Sparkles,
+  Droplets
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from './ThemeToggle';

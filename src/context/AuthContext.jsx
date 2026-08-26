@@ -4,43 +4,60 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('weather_index_user');
-    return savedUser ? JSON.parse(savedUser) : {
-      name: 'Agri Officer',
-      email: 'officer@moes.gov.in',
-      role: 'Officer',
-      avatar: null
-    };
+    try {
+      const savedUser = localStorage.getItem('weather_index_user');
+      return savedUser ? JSON.parse(savedUser) : {
+        name: 'Agri Officer',
+        email: 'officer@moes.gov.in',
+        role: 'Officer',
+        avatar: null
+      };
+    } catch {
+      return {
+        name: 'Agri Officer',
+        email: 'officer@moes.gov.in',
+        role: 'Officer',
+        avatar: null
+      };
+    }
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const savedAuth = localStorage.getItem('weather_index_auth');
-    return savedAuth !== 'false'; // Default true so demo pages open immediately without blank screen/unexpected redirect
+    try {
+      const savedAuth = localStorage.getItem('weather_index_auth');
+      return savedAuth !== 'false';
+    } catch {
+      return true;
+    }
   });
 
   const login = (email, password) => {
     const userData = {
-      name: email.split('@')[0].toUpperCase() || 'Agri Officer',
+      name: email ? email.split('@')[0].toUpperCase() : 'Agri Officer',
       email: email || 'officer@moes.gov.in',
       role: 'Officer'
     };
     setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('weather_index_user', JSON.stringify(userData));
-    localStorage.setItem('weather_index_auth', 'true');
+    try {
+      localStorage.setItem('weather_index_user', JSON.stringify(userData));
+      localStorage.setItem('weather_index_auth', 'true');
+    } catch {}
     return { success: true };
   };
 
   const register = (name, email, password) => {
     const userData = {
       name: name || 'New User',
-      email: email,
+      email: email || 'user@moes.gov.in',
       role: 'Officer'
     };
     setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('weather_index_user', JSON.stringify(userData));
-    localStorage.setItem('weather_index_auth', 'true');
+    try {
+      localStorage.setItem('weather_index_user', JSON.stringify(userData));
+      localStorage.setItem('weather_index_auth', 'true');
+    } catch {}
     return { success: true };
   };
 
@@ -53,16 +70,20 @@ export const AuthProvider = ({ children }) => {
     };
     setUser(googleUser);
     setIsAuthenticated(true);
-    localStorage.setItem('weather_index_user', JSON.stringify(googleUser));
-    localStorage.setItem('weather_index_auth', 'true');
+    try {
+      localStorage.setItem('weather_index_user', JSON.stringify(googleUser));
+      localStorage.setItem('weather_index_auth', 'true');
+    } catch {}
     return { success: true };
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('weather_index_user');
-    localStorage.setItem('weather_index_auth', 'false');
+    try {
+      localStorage.removeItem('weather_index_user');
+      localStorage.setItem('weather_index_auth', 'false');
+    } catch {}
   };
 
   return (

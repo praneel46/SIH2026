@@ -25,21 +25,13 @@ import { Register } from './pages/Register';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
-// Route Guard: Protected Routes (Requires Authenticated Session & Dashboard Layout Shell)
+// Route Wrapper: Protected Application Routes (Dashboard Layout Shell)
 const ProtectedDashboardRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
   return <DashboardLayout>{children}</DashboardLayout>;
 };
 
-// Route Guard: Public Auth Routes (Redirects to /dashboard if already logged in)
+// Route Wrapper: Public Auth Routes
 const PublicAuthRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
   return children;
 };
 

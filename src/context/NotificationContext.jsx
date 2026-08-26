@@ -74,11 +74,11 @@ export const NotificationProvider = ({ children }) => {
       color: 'text-sky-500 bg-sky-500/10 border-sky-500/30'
     },
     {
-      id: `notif-ensemble-${selectedLocation.district}`,
+      id: `notif-ensemble-${selectedLocation?.district || 'Bengaluru Rural'}`,
       type: 'forecast_update',
       category: 'FORECAST_UPDATE',
       title: `New Monsoon Cycle Forecast Ingested`,
-      message: `Multi-model ensemble (NOAA GFS, DWD ICON, ECMWF IFS) updated for ${selectedLocation.district} (${selectedLocation.lat?.toFixed(2)}°N, ${selectedLocation.lon?.toFixed(2)}°E).`,
+      message: `Multi-model ensemble (NOAA GFS, DWD ICON, ECMWF IFS) updated for ${selectedLocation?.district || 'Bengaluru Rural'} (${Number(selectedLocation?.lat ?? 13.29).toFixed(2)}°N, ${Number(selectedLocation?.lon ?? 77.55).toFixed(2)}°E).`,
       actionLabel: 'Open Dashboard',
       route: '/dashboard',
       time: '3 hours ago',
