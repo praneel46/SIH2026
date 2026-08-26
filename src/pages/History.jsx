@@ -46,10 +46,9 @@ export const History = () => {
         limit: 50
       });
       const historyList = res.records || res.data || [];
-      if (res.success && historyList.length > 0) {
+      if (res.success && Array.isArray(historyList) && historyList.length > 0) {
         setRecords(historyList);
       } else {
-        // Prototype seed records if database is empty on fresh local dev
         setRecords([
           {
             id: 101,

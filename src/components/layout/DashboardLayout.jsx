@@ -49,15 +49,15 @@ export const DashboardLayout = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const sidebarNavItems = [
-    { name: t('dashboardOverview') || 'Monsoon Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: t('cropAdvisoryGuidance') || 'Crop Advisory', path: '/advisory', icon: Sprout },
-    { name: t('karnatakaRiskMap'), path: '/risk-map', icon: AlertTriangle },
-    { name: t('farmerAdvisory') || 'Farmer Outlook', path: '/farmer-dashboard', icon: Droplets },
-    { name: t('officerTelemetry'), path: '/officer-dashboard', icon: Radio },
-    { name: t('scenarioSimulator'), path: '/predictions', icon: BarChart3 },
-    { name: t('modelSpecification'), path: '/model-insights', icon: BrainCircuit },
+    { name: t('dashboardOverview') || 'Monsoon & Crop Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: t('cropAdvisoryGuidance') || 'Crop Water Advisory', path: '/advisory', icon: Sprout },
+    { name: t('karnatakaRiskMap') || 'Karnataka Risk Map', path: '/risk-map', icon: AlertTriangle },
+    { name: t('farmerAdvisory') || 'Farmer Extension Outlook', path: '/farmer-dashboard', icon: Droplets },
+    { name: t('officerTelemetry') || 'Extension Officer Telemetry', path: '/officer-dashboard', icon: Radio },
+    { name: t('scenarioSimulator') || 'Scenario Simulator', path: '/predictions', icon: BarChart3 },
+    { name: t('modelSpecification') || 'Model Specification', path: '/model-insights', icon: BrainCircuit },
     { name: t('predictionHistory') || 'Prediction History', path: '/history', icon: FileText },
-    { name: t('systemStatus'), path: '/admin-dashboard', icon: Settings },
+    { name: t('systemStatus') || 'System Status', path: '/admin-dashboard', icon: Settings },
   ];
 
   // Extract flat locations list for location search
@@ -419,6 +419,20 @@ export const DashboardLayout = ({ children }) => {
 
         {/* Dashboard Content Injector */}
         <main className="p-6 space-y-6 flex-1 bg-slate-50 dark:bg-[#04060E] transition-colors">
+          {location.state?.authError && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-between shadow-sm">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span>{location.state.authError}</span>
+              </div>
+              <button 
+                onClick={() => navigate(location.pathname, { replace: true, state: {} })} 
+                className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 text-[10px]"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
           {children}
         </main>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   CloudRain, 
   ArrowRight, 
@@ -20,7 +21,20 @@ import {
 import stormBg from '../assets/hero-storm-bg.jpg';
 
 export const Home = () => {
+  const { isAuthenticated, role, user } = useAuth();
+  const navigate = useNavigate();
   const [flippedCard, setFlippedCard] = useState(null);
+
+  const handleGetStarted = () => {
+    const currentRole = role || user?.role;
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else if (currentRole === 'officer' || currentRole === 'Officer') {
+      navigate('/officer-dashboard');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   // Staggered entrance animation variants
   const heroContainerVariants = {
@@ -122,13 +136,13 @@ export const Home = () => {
 
             {/* CTA Buttons (Neumorphic + Glassmorphic Blend) */}
             <motion.div variants={itemFadeUp} className="flex flex-wrap items-center gap-4 pt-1">
-              <Link
-                to="/dashboard"
+              <button
+                onClick={handleGetStarted}
                 className="px-7 py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:scale-[1.03] active:scale-98 transition-all flex items-center space-x-2 neu-button"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
               <a
                 href="#how-it-works"
                 className="px-6 py-3 rounded-full bg-[#0B1021]/80 hover:bg-[#0B1021] border border-slate-700/80 text-slate-100 font-semibold text-xs flex items-center space-x-2 backdrop-blur-md transition-all hover:border-slate-500 shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
@@ -416,13 +430,13 @@ export const Home = () => {
           </div>
 
           <div className="shrink-0">
-            <Link
-              to="/dashboard"
+            <button
+              onClick={handleGetStarted}
               className="px-7 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:scale-105 transition-all neu-button"
             >
               <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
 
         </div>

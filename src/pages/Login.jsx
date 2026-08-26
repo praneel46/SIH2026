@@ -15,10 +15,11 @@ import authBg from '../assets/auth-bg.jpg';
 import { motion } from 'framer-motion';
 
 export const Login = () => {
-  const { login, loginWithGoogle } = useAuth();
+  const { loginFarmer, loginOfficer, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('officer@moes.gov.in');
+  const [authRole, setAuthRole] = useState('farmer'); // 'farmer' or 'officer'
+  const [email, setEmail] = useState('farmer@krishi.gov.in');
   const [password, setPassword] = useState('••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -27,12 +28,19 @@ export const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError('Please enter your credentials.');
       return;
     }
-    const res = login(email, password);
-    if (res.success) {
-      navigate('/dashboard');
+    if (authRole === 'officer') {
+      const res = loginOfficer(email, password);
+      if (res.success) {
+        navigate('/officer-dashboard');
+      }
+    } else {
+      const res = loginFarmer(email, password);
+      if (res.success) {
+        navigate('/dashboard');
+      }
     }
   };
 
@@ -46,7 +54,7 @@ export const Login = () => {
   return (
     <div className="min-h-screen w-full relative flex flex-col justify-between items-center font-sans selection:bg-sky-500 selection:text-white bg-transparent">
       
-      {/* Full-Screen Edge-to-Edge Background Layer (Covering 100% Viewport) */}
+      {/* Full-Screen Edge-to-Edge Background Layer */}
       <div className="fixed inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
         <img
           src={authBg}
@@ -94,19 +102,38 @@ export const Login = () => {
               <p className="text-xs font-semibold text-slate-300">
                 AI-Powered Climate Intelligence
               </p>
-              <p className="text-[10px] font-medium text-sky-300 tracking-wide">
-                Understand • Predict • Prepare
-              </p>
             </div>
 
-            {/* Auth Mode Tabs */}
-            <div className="flex border-b border-slate-800 text-xs font-bold pt-1">
-              <button className="flex-1 py-1.5 text-sky-400 border-b-2 border-sky-400">
-                Sign In
+            {/* Farmer vs Officer Role Selector */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthRole('farmer');
+                  setEmail('farmer@krishi.gov.in');
+                }}
+                className={`py-2 rounded-xl transition-all ${
+                  authRole === 'farmer'
+                    ? 'bg-sky-500 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Farmer Login
               </button>
-              <Link to="/register" className="flex-1 py-1.5 text-slate-400 hover:text-slate-200 transition-colors">
-                Create Account
-              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthRole('officer');
+                  setEmail('OFFICER-KA-101');
+                }}
+                className={`py-2 rounded-xl transition-all ${
+                  authRole === 'officer'
+                    ? 'bg-sky-500 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Officer Access
+              </button>
             </div>
 
             {error && (
@@ -117,12 +144,12 @@ export const Login = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3 text-left">
-              {/* Email Field */}
+              {/* Credentials Field */}
               <div className="relative">
                 <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="email"
-                  placeholder="Email address"
+                  type="text"
+                  placeholder={authRole === 'officer' ? "Officer ID (e.g. OFFICER-KA-101)" : "Email or Mobile Number"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0B1222]/90 border border-slate-700/80 text-xs font-medium text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 transition-all shadow-inner"

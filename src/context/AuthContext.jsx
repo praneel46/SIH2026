@@ -6,36 +6,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('weather_index_user');
-      return savedUser ? JSON.parse(savedUser) : {
-        name: 'Agri Officer',
-        email: 'officer@moes.gov.in',
-        role: 'Officer',
-        avatar: null
-      };
+      return savedUser ? JSON.parse(savedUser) : null;
     } catch {
-      return {
-        name: 'Agri Officer',
-        email: 'officer@moes.gov.in',
-        role: 'Officer',
-        avatar: null
-      };
+      return null;
     }
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       const savedAuth = localStorage.getItem('weather_index_auth');
-      return savedAuth !== 'false';
+      return savedAuth === 'true';
     } catch {
-      return true;
+      return false;
     }
   });
 
-  const login = (email, password) => {
+  const loginFarmer = (email, password) => {
     const userData = {
-      name: email ? email.split('@')[0].toUpperCase() : 'Agri Officer',
-      email: email || 'officer@moes.gov.in',
-      role: 'Officer'
+      name: email ? email.split('@')[0].toUpperCase() : 'Farmer User',
+      email: email || 'farmer@krishi.gov.in',
+      role: 'farmer'
     };
     setUser(userData);
     setIsAuthenticated(true);
@@ -46,11 +36,33 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   };
 
+  const loginOfficer = (officerId, password) => {
+    const userData = {
+      name: officerId ? `Officer ${officerId}` : 'Extension Officer',
+      email: officerId ? `${officerId.toLowerCase()}@moes.gov.in` : 'officer@moes.gov.in',
+      role: 'officer'
+    };
+    setUser(userData);
+    setIsAuthenticated(true);
+    try {
+      localStorage.setItem('weather_index_user', JSON.stringify(userData));
+      localStorage.setItem('weather_index_auth', 'true');
+    } catch {}
+    return { success: true };
+  };
+
+  const login = (email, password) => {
+    if (email && email.toLowerCase().includes('officer')) {
+      return loginOfficer(email, password);
+    }
+    return loginFarmer(email, password);
+  };
+
   const register = (name, email, password) => {
     const userData = {
-      name: name || 'New User',
-      email: email || 'user@moes.gov.in',
-      role: 'Officer'
+      name: name || 'Registered Farmer',
+      email: email || 'farmer@krishi.gov.in',
+      role: 'farmer'
     };
     setUser(userData);
     setIsAuthenticated(true);
@@ -65,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     const googleUser = {
       name: 'Dr. Ramesh Kumar',
       email: 'ramesh.kumar@gmail.com',
-      role: 'Officer',
+      role: 'farmer',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
     };
     setUser(googleUser);
@@ -87,7 +99,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, loginWithGoogle, logout }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        isAuthenticated, 
+        role: user?.role || 'farmer', 
+        login, 
+        loginFarmer, 
+        loginOfficer, 
+        register, 
+        loginWithGoogle, 
+        logout 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
