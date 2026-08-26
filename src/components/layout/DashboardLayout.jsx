@@ -51,8 +51,8 @@ export const DashboardLayout = ({ children }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeRole = role || user?.role || 'farmer';
-  const isOfficerUser = activeRole === 'officer' || activeRole === 'Officer';
+  const activeRole = user?.role || role || 'farmer';
+  const isOfficerUser = String(activeRole).toLowerCase() === 'officer';
 
   const rawNavItems = [
     { name: t('dashboardOverview') || 'Monsoon & Crop Dashboard', path: '/dashboard', icon: LayoutDashboard },
