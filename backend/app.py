@@ -107,10 +107,11 @@ app = FastAPI(
     description="Multi-Source Ensemble Forecasts, Climatological Baselines, and Regional TFLite Inference"
 )
 
-# Enable CORS for Vite frontend dev server
+# Enable CORS for production Vercel frontend and Vite dev servers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://sih-26086.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:5174",
@@ -118,7 +119,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000"
     ],
-    allow_origin_regex=".*",
+    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:.*|http://127\.0\.0\.1:.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

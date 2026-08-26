@@ -87,6 +87,27 @@ const ProtectedRoute = ({ children }) => {
   );
 };
 
+// Route Guard: Farmer Only Guard
+const FarmerRoute = ({ children }) => {
+  const { isAuthenticated, user, role } = useAuth();
+  const currentRole = user?.role || role || 'farmer';
+  const isOfficer = String(currentRole).toLowerCase() === 'officer';
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isOfficer) {
+    return <Navigate to="/officer-dashboard" replace state={{ authNotice: 'Redirected to Extension Officer Telemetry.' }} />;
+  }
+
+  return (
+    <ErrorBoundary>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ErrorBoundary>
+  );
+};
+
 // Route Guard: Extension Officer Only Guard
 const OfficerRoute = ({ children }) => {
   const { isAuthenticated, user, role } = useAuth();
@@ -158,7 +179,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard" element={<RoleBasedDashboardRoute />} />
           <Route path="/advisory" element={<ProtectedRoute><Advisory /></ProtectedRoute>} />
           <Route path="/risk-map" element={<ProtectedRoute><RiskMap /></ProtectedRoute>} />
-          <Route path="/farmer-dashboard" element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />
+          <Route path="/farmer-dashboard" element={<FarmerRoute><FarmerDashboard /></FarmerRoute>} />
           <Route path="/officer-dashboard" element={<OfficerRoute><OfficerDashboard /></OfficerRoute>} />
           <Route path="/predictions" element={<ProtectedRoute><Predictions /></ProtectedRoute>} />
           <Route path="/simulator" element={<ProtectedRoute><Predictions /></ProtectedRoute>} />
