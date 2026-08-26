@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
+import { mockCrops } from '../data/mock/mockCrops';
 
 const RoleContext = createContext();
 
 export const RoleProvider = ({ children }) => {
   const [role, setRole] = useState('Officer'); // Default: Agricultural Officer
+  
+  // Central application location state with full administrative hierarchy
   const [selectedLocation, setSelectedLocation] = useState({
     state: 'Karnataka',
     district: 'Bengaluru Rural',
@@ -13,8 +16,20 @@ export const RoleProvider = ({ children }) => {
     lon: 77.55
   });
 
+  // Central application crop state
+  const [selectedCrop, setSelectedCrop] = useState(mockCrops[0]); // Default: Ragi
+
   return (
-    <RoleContext.Provider value={{ role, setRole, selectedLocation, setSelectedLocation }}>
+    <RoleContext.Provider 
+      value={{ 
+        role, 
+        setRole, 
+        selectedLocation, 
+        setSelectedLocation,
+        selectedCrop,
+        setSelectedCrop
+      }}
+    >
       {children}
     </RoleContext.Provider>
   );
@@ -27,3 +42,7 @@ export const useRole = () => {
   }
   return context;
 };
+
+// Convenient alias for location and crop context consumers
+export const useAppContext = useRole;
+

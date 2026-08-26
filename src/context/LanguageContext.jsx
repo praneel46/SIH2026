@@ -5,11 +5,15 @@ const LanguageContext = createContext();
 export const translations = {
   en: {
     // Navigation
-    farmerOutlook: "Farmer Outlook & Advisory",
+    dashboardOverview: "Monsoon & Crop Dashboard",
+    cropAdvisoryGuidance: "Crop Water Advisory",
+    farmerOutlook: "Farmer Farm Advisory",
+    farmerAdvisory: "Farmer Extension Outlook",
     officerTelemetry: "Extension Officer Telemetry",
     karnatakaRiskMap: "Karnataka Risk Map",
     scenarioSimulator: "Scenario Simulator",
     modelSpecification: "Model Specification",
+    predictionHistory: "Prediction History",
     systemStatus: "System Status",
     
     // Top Bar
@@ -78,11 +82,15 @@ export const translations = {
   },
   kn: {
     // Navigation
+    dashboardOverview: "ಮಾನ್ಸೂನ್ ಮತ್ತು ಕೃಷಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    cropAdvisoryGuidance: "ಬೆಳೆ ನೀರಿನ ಸಲಹಾ ಕೇಂದ್ರ",
     farmerOutlook: "ರೈತರ ಕೃಷಿ ಸಲಹಾ ಕೇಂದ್ರ",
+    farmerAdvisory: "ರೈತರ ಕೃಷಿ ವಿಸ್ತರಣಾ ನೋಟ",
     officerTelemetry: "ಕೃಷಿ ಅಧಿಕಾರಿ ನಿಯಂತ್ರಣ ಕೊಠಡಿ",
     karnatakaRiskMap: "ಕರ್ನಾಟಕ ಮಳೆ ಅಪಾಯ ನಕ್ಷೆ",
     scenarioSimulator: "ಹವಾಮಾನ ಸಿಮ್ಯುಲೇಟರ್",
     modelSpecification: "ಮಾದರಿ ತಾಂತ್ರಿಕ ವಿವರಣೆ",
+    predictionHistory: "ಮುನ್ಸೂಚನೆ ಇತಿಹಾಸ",
     systemStatus: "ವ್ಯವಸ್ಥೆಯ ಸ್ಥಿತಿ",
     
     // Top Bar

@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { RoleProvider } from './context/RoleContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -76,7 +77,7 @@ const AnimatedRoutes = () => {
           <Route path="/register" element={<PublicAuthRoute><Register /></PublicAuthRoute>} />
 
           {/* Protected Application Routes (Dashboard Layout Shell with Left Sidebar & Top Greeting Header) */}
-          <Route path="/dashboard" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/dashboard" element={<ProtectedDashboardRoute><Dashboard /></ProtectedDashboardRoute>} />
           <Route path="/farmer-dashboard" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
           <Route path="/officer-dashboard" element={<ProtectedDashboardRoute><OfficerDashboard /></ProtectedDashboardRoute>} />
           <Route path="/predictions" element={<ProtectedDashboardRoute><Predictions /></ProtectedDashboardRoute>} />
@@ -86,8 +87,8 @@ const AnimatedRoutes = () => {
           <Route path="/model-spec" element={<ProtectedDashboardRoute><ModelInsights /></ProtectedDashboardRoute>} />
           <Route path="/admin-dashboard" element={<ProtectedDashboardRoute><AdminDashboard /></ProtectedDashboardRoute>} />
           <Route path="/system-status" element={<ProtectedDashboardRoute><AdminDashboard /></ProtectedDashboardRoute>} />
-          <Route path="/advisory" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
-          <Route path="/history" element={<ProtectedDashboardRoute><OfficerDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/advisory" element={<ProtectedDashboardRoute><Advisory /></ProtectedDashboardRoute>} />
+          <Route path="/history" element={<ProtectedDashboardRoute><History /></ProtectedDashboardRoute>} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -99,15 +100,18 @@ export default function App() {
     <ThemeProvider>
       <LanguageProvider>
         <RoleProvider>
-          <AuthProvider>
-            <Router>
-              <MainLayout>
-                <AnimatedRoutes />
-              </MainLayout>
-            </Router>
-          </AuthProvider>
+          <NotificationProvider>
+            <AuthProvider>
+              <Router>
+                <MainLayout>
+                  <AnimatedRoutes />
+                </MainLayout>
+              </Router>
+            </AuthProvider>
+          </NotificationProvider>
         </RoleProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
 }
+
