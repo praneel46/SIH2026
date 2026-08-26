@@ -24,7 +24,28 @@ A modern climate intelligence platform designed to analyze rainfall anomalies, c
 
 ---
 
-## 🌐 Overview
+## 🚀 Running the App
+
+Follow these exact steps to start both the backend API and frontend dev server:
+
+### 1. Backend (FastAPI + TFLite + SQLite)
+```bash
+pip install -r requirements.txt
+python app.py
+```
+*(Or run via Uvicorn: `uvicorn app:app --reload --port 8000`)*
+
+The FastAPI backend will start on **`http://localhost:8000`** with OpenAPI docs at **`http://localhost:8000/docs`**.
+
+### 2. Frontend (React + Vite + Tailwind)
+```bash
+npm install
+npm run dev
+```
+
+The Vite dev server will start on **`http://localhost:5173`**.
+
+---
 
 **Weather Index** is an AI-powered climate intelligence platform focused on transforming complex climate and weather data into simple, actionable insights.
 

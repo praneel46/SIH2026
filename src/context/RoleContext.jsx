@@ -5,10 +5,12 @@ const RoleContext = createContext();
 export const RoleProvider = ({ children }) => {
   const [role, setRole] = useState('Officer'); // Default: Agricultural Officer
   const [selectedLocation, setSelectedLocation] = useState({
-    state: 'Maharashtra',
-    district: 'Pune',
-    block: 'Haveli',
-    village: 'Khed Shivapur'
+    state: 'Karnataka',
+    district: 'Bengaluru Rural',
+    block: 'Doddaballapura',
+    village: 'Tubagere',
+    lat: 13.29,
+    lon: 77.55
   });
 
   return (

@@ -1,45 +1,48 @@
 export const mockPredictions = [
   {
-    id: "PRED-2026-8942",
-    date: "2026-08-25",
-    targetPeriod: "August 2026 - September 2026",
-    location: "Western Ghats / Maharashtra Region",
-    rainfallAnomaly: -18.4,
-    unit: "mm (estimated deviation)",
-    riskCategory: "BELOW_NORMAL",
+    id: "PRED-2026-KA-BLR",
+    date: "2026-08-26",
+    targetPeriod: "August 2026 (Monsoon Peak)",
+    location: "Bengaluru Rural, Karnataka",
+    rainfallAnomaly: 63.94,
+    historicalMean: 120.51,
+    deviationPct: -46.9,
+    unit: "mm (70/30 Ensemble Synthesis)",
+    riskCategory: "HIGH",
+    severity: "SEVERE_DEFICIT",
+    breakPhaseRisk: "CRITICAL",
+    confidenceNote: "70% 3-model meteorological ensemble (GFS/ICON/ECMWF) + 30% historical baseline (2000-2023).",
+    inputs: { latitude: 13.29, longitude: 77.55, month: 8, crop_type: "ragi", dmi: 0.10, oni: -0.30, mjo_phase: 4.0, mjo_amplitude: 1.2 }
+  },
+  {
+    id: "PRED-2026-KA-MYS",
+    date: "2026-08-20",
+    targetPeriod: "August 2026 (Monsoon Peak)",
+    location: "Mysuru, Karnataka",
+    rainfallAnomaly: 88.50,
+    historicalMean: 108.20,
+    deviationPct: -18.2,
+    unit: "mm (70/30 Ensemble Synthesis)",
+    riskCategory: "MODERATE",
     severity: "MODERATE_DEFICIT",
     breakPhaseRisk: "HIGH",
-    confidenceNote: "Prototype regression model trained on DMI lag features. Regional scale inference.",
-    dmiInput: { dmi: 0.42, dmi_lag1: 0.35, dmi_lag2: 0.28 },
-    scaledInput: [-0.05, 0.02, 0.08, 0.7077, -0.7066]
+    confidenceNote: "Moderate deficit forecast; recommended supplemental protective irrigation.",
+    inputs: { latitude: 12.30, longitude: 76.65, month: 8, crop_type: "maize", dmi: 0.15, oni: -0.20, mjo_phase: 3.0, mjo_amplitude: 1.0 }
   },
   {
-    id: "PRED-2026-8941",
-    date: "2026-08-15",
-    targetPeriod: "Mid August 2026",
-    location: "Central Deccan Plateau",
-    rainfallAnomaly: -24.1,
-    unit: "mm (estimated deviation)",
-    riskCategory: "BREAK_RISK",
-    severity: "HIGH_BREAK_RISK",
-    breakPhaseRisk: "CRITICAL",
-    confidenceNote: "Model indicates persistent suppressed precipitation signal based on negative Indian Ocean Dipole lag trends.",
-    dmiInput: { dmi: -0.15, dmi_lag1: -0.22, dmi_lag2: -0.10 },
-    scaledInput: [-0.29, -0.08, -0.45, 0.866, -0.5]
-  },
-  {
-    id: "PRED-2026-8940",
-    date: "2026-08-01",
-    targetPeriod: "Early August 2026",
-    location: "Northern Plains / Indo-Gangetic Belt",
-    rainfallAnomaly: +12.8,
-    unit: "mm (estimated deviation)",
-    riskCategory: "ABOVE_NORMAL",
-    severity: "SURPLUS_ALERT",
+    id: "PRED-2026-KA-BEL",
+    date: "2026-08-10",
+    targetPeriod: "August 2026 (Monsoon Peak)",
+    location: "Belagavi, Karnataka",
+    rainfallAnomaly: 195.40,
+    historicalMean: 202.10,
+    deviationPct: -3.3,
+    unit: "mm (70/30 Ensemble Synthesis)",
+    riskCategory: "NORMAL",
+    severity: "OPTIMAL_CONDITIONS",
     breakPhaseRisk: "LOW",
-    confidenceNote: "Favorable Dipole Mode Index alignment creating positive anomaly conditions.",
-    dmiInput: { dmi: 0.58, dmi_lag1: 0.45, dmi_lag2: 0.38 },
-    scaledInput: [0.22, 0.18, 0.15, 0.5, -0.866]
+    confidenceNote: "Normal seasonal monsoon conditions forecast across Northern Karnataka belt.",
+    inputs: { latitude: 15.85, longitude: 74.50, month: 8, crop_type: "jowar", dmi: 0.05, oni: -0.10, mjo_phase: 4.0, mjo_amplitude: 1.1 }
   }
 ];
 
@@ -52,3 +55,4 @@ export const mockAnomalyTrends = [
   { day: "Aug 26", observed: -18, projected: -4, actual: -18, predicted: -4 },
   { day: "Aug 31", observed: 12, projected: 18, actual: 12, predicted: 18 }
 ];
+

@@ -20,13 +20,14 @@
 # ==============================================================================
 
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import numpy as np
 import json
 import requests
 import uvicorn
-import tensorflow as tf
+import struct
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
@@ -39,6 +40,20 @@ app = FastAPI(
     title="Weather Index Monsoon Prediction & Monitoring API",
     version="2.0.0",
     description="Multi-Source Ensemble Forecasts, Climatological Baselines, and Regional TFLite Inference"
+)
+
+# Enable CORS for Vite frontend dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ==============================================================================
@@ -55,11 +70,59 @@ with open("scaler_params.json", "r", encoding="utf-8") as f:
 MEANS = np.array(scaler_params["mean"], dtype=np.float32)
 SCALES = np.array(scaler_params["scale"], dtype=np.float32)
 
-# Load TFLite Model Interpreter
-interpreter = tf.lite.Interpreter(model_path="monsoon_regional_model.tflite")
-interpreter.allocate_tensors()
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+# Universal TFLite Model Loader (TFLite Runtime / TensorFlow / FlatBuffers Fallback)
+_tflite_interpreter = None
+_tflite_weights = None
+
+try:
+    import ai_edge_litert.interpreter as _tflite_rt
+    _tflite_interpreter = _tflite_rt.Interpreter(model_path="monsoon_regional_model.tflite")
+    _tflite_interpreter.allocate_tensors()
+except Exception:
+    try:
+        import tensorflow as tf
+        _tflite_interpreter = tf.lite.Interpreter(model_path="monsoon_regional_model.tflite")
+        _tflite_interpreter.allocate_tensors()
+    except Exception:
+        # Direct parsing of monsoon_regional_model.tflite FlatBuffers schema (Zero-dependency fallback)
+        with open("monsoon_regional_model.tflite", "rb") as f:
+            _buf = f.read()
+
+        _root_pos = struct.unpack('<I', _buf[0:4])[0]
+        _vtable_off = struct.unpack('<i', _buf[_root_pos:_root_pos+4])[0]
+        _vtable_pos = _root_pos - _vtable_off
+        _vtable_len = struct.unpack('<H', _buf[_vtable_pos:_vtable_pos+2])[0]
+        _num_fields = (_vtable_len - 4) // 2
+        _fields = [struct.unpack('<H', _buf[_vtable_pos + 4 + i*2 : _vtable_pos + 6 + i*2])[0] for i in range(_num_fields)]
+
+        _buffers_field_offset = _fields[4]
+        _buffers_vec_pos = _root_pos + _buffers_field_offset + struct.unpack('<I', _buf[_root_pos + _buffers_field_offset : _root_pos + _buffers_field_offset + 4])[0]
+        _num_buffers = struct.unpack('<I', _buf[_buffers_vec_pos : _buffers_vec_pos + 4])[0]
+
+        _buffers = {}
+        for i in range(_num_buffers):
+            _b_off = struct.unpack('<I', _buf[_buffers_vec_pos + 4 + i*4 : _buffers_vec_pos + 8 + i*4])[0]
+            _b_pos = _buffers_vec_pos + 4 + i*4 + _b_off
+            _bv_off = struct.unpack('<i', _buf[_b_pos : _b_pos+4])[0]
+            _bv_pos = _b_pos - _bv_off
+            _bv_len = struct.unpack('<H', _buf[_bv_pos : _bv_pos+2])[0]
+            if _bv_len > 4:
+                _df_off = struct.unpack('<H', _buf[_bv_pos+4 : _bv_pos+6])[0]
+                if _df_off != 0:
+                    _vec_off = struct.unpack('<I', _buf[_b_pos + _df_off : _b_pos + _df_off + 4])[0]
+                    _d_pos = _b_pos + _df_off + _vec_off
+                    _d_len = struct.unpack('<I', _buf[_d_pos : _d_pos + 4])[0]
+                    _raw = _buf[_d_pos+4 : _d_pos+4+_d_len]
+                    _buffers[i] = np.frombuffer(_raw, dtype=np.float32)
+
+        _tflite_weights = {
+            "W1": _buffers[6].reshape(16, 7),
+            "b1": _buffers[7],
+            "W2": _buffers[5].reshape(8, 16),
+            "b2": _buffers[2],
+            "W3": _buffers[4].reshape(1, 8),
+            "b3": _buffers[3]
+        }
 
 # Load Crop Coefficients (FAO-56 Table 12 & Table 11)
 with open("crop_coefficients.json", "r", encoding="utf-8") as f:
@@ -296,9 +359,20 @@ def run_model_inference(lat: float, lon: float, month: int, dmi: float, oni: flo
     """Executes inference using the deployed TFLite model."""
     raw_input = np.array([[lat, lon, month, dmi, oni, mjo_phase, mjo_amplitude]], dtype=np.float32)
     scaled_input = (raw_input - MEANS) / SCALES
-    interpreter.set_tensor(input_details[0]["index"], scaled_input.astype(np.float32))
-    interpreter.invoke()
-    return float(interpreter.get_tensor(output_details[0]["index"])[0][0])
+    
+    if _tflite_interpreter is not None:
+        input_details = _tflite_interpreter.get_input_details()
+        output_details = _tflite_interpreter.get_output_details()
+        _tflite_interpreter.set_tensor(input_details[0]["index"], scaled_input.astype(np.float32))
+        _tflite_interpreter.invoke()
+        return float(_tflite_interpreter.get_tensor(output_details[0]["index"])[0][0])
+    else:
+        # Exact FlatBuffers forward pass (Keras Sequential: Dense16(relu) -> Dense8(relu) -> Dense1(linear))
+        x = scaled_input[0]
+        h1 = np.maximum(0.0, np.dot(_tflite_weights["W1"], x) + _tflite_weights["b1"])
+        h2 = np.maximum(0.0, np.dot(_tflite_weights["W2"], h1) + _tflite_weights["b2"])
+        y = np.dot(_tflite_weights["W3"], h2) + _tflite_weights["b3"]
+        return float(y[0])
 
 def compute_weighted_prediction(ensemble_16d_mm: float, historical_mean_mm: float) -> Dict[str, float]:
     """

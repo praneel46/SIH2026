@@ -249,9 +249,16 @@ export const apiService = {
           location:
             result.location ?? {
               latitude: payload.latitude,
-              longitude: payload.longitude
+              longitude: payload.longitude,
+              matched_district: 'Bengaluru Rural',
+              low_confidence_match: false
             },
 
+          lowConfidenceMatch:
+            result.location?.low_confidence_match ?? false,
+
+          matchedDistrict:
+            result.location?.matched_district ?? 'Bengaluru Rural',
 
           // Rainfall prediction
           predictedMonthlyRainfall:
@@ -260,6 +267,11 @@ export const apiService = {
           forecast14DayRainfall:
             forecast14Day,
 
+          historicalBaseline:
+            result.forecast?.historical_baseline_mm ?? 120.51,
+
+          deviationPct:
+            result.forecast?.deviation_pct ?? 0,
 
           // Compatibility with older UI
           rainfallAnomaly:
@@ -267,15 +279,15 @@ export const apiService = {
 
           unit: 'mm',
 
-
           // Risk
-          riskCategory,
+          riskCategory:
+            result.risk_assessment?.risk_category ?? riskCategory,
           colorCode,
           breakPhaseRisk,
 
           drySpellWarning,
-          riskLevel,
-
+          riskLevel:
+            result.risk_assessment?.risk_category ?? riskLevel,
 
           // Advisory
           advisory: {
@@ -530,6 +542,91 @@ export const apiService = {
       return {
         success: false,
         error: error.message
+      };
+    }
+  },
+
+  // ==========================================================
+  // 10. MULTI-SOURCE METEOROLOGICAL ENSEMBLE + CROP WATER CHECK
+  //
+  // Calls POST /api/v1/trigger-ensemble-check
+  // Yields: GFS/ICON/ECMWF spread, agreement, 70/30 synthesis,
+  // FAO-56 Penman-Monteith crop water balance & irrigation gap
+  // ==========================================================
+
+  async getEnsembleCheck(inputFeatures) {
+    try {
+      const payload = {
+        latitude: Number(inputFeatures.latitude ?? 13.29),
+        longitude: Number(inputFeatures.longitude ?? 77.55),
+        month: Number(inputFeatures.month ?? (new Date().getMonth() + 1)),
+        crop_type: String(inputFeatures.crop_type ?? inputFeatures.cropType ?? 'ragi').toLowerCase(),
+        dmi: Number(inputFeatures.dmi ?? 0.1),
+        oni: Number(inputFeatures.oni ?? -0.3),
+        mjo_phase: Number(inputFeatures.mjo_phase ?? inputFeatures.mjoPhase ?? 4.0),
+        mjo_amplitude: Number(inputFeatures.mjo_amplitude ?? inputFeatures.mjoAmplitude ?? 1.2)
+      };
+
+      const response = await fetch(`${API_BASE_URL}/trigger-ensemble-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        let errorMsg = 'Ensemble check failed';
+        try {
+          const errData = await response.json();
+          errorMsg = errData.detail || errData.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
+      const result = await response.json();
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('Ensemble Check API Error:', error);
+      return {
+        success: false,
+        error: error.message || 'Unable to connect to ensemble verification service.',
+        data: null
+      };
+    }
+  },
+
+  // ==========================================================
+  // 11. FETCH PREDICTION LOGS FROM SQLITE DATABASE
+  //
+  // Calls GET /api/v1/prediction-history
+  // ==========================================================
+
+  async getPredictionHistory(district = null, limit = 20) {
+    try {
+      let url = `${API_BASE_URL}/prediction-history?limit=${limit}`;
+      if (district) {
+        url += `&district=${encodeURIComponent(district)}`;
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load history (HTTP ${response.status})`);
+      }
+
+      const result = await response.json();
+      return {
+        success: true,
+        data: result.records ?? [],
+        count: result.count ?? 0
+      };
+    } catch (error) {
+      console.error('Prediction History Error:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: []
       };
     }
   }

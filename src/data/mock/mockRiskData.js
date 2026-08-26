@@ -1,82 +1,147 @@
 export const mockRiskData = [
   {
-    id: "REG-MH-PUNE-HAV",
-    districtName: "Pune",
-    blockName: "Haveli",
-    state: "Maharashtra",
-    lat: 18.5204,
-    lng: 73.8567,
-    rainfallAnomaly: -18.4,
-    riskCategory: "BELOW_NORMAL",
-    riskLabel: "Below Normal (-18.4 mm)",
-    color: "#EAB308", // Amber
-    breakSpellProbability: "65%",
-    soilMoistureStatus: "38% (Deficit)",
-    dominantCrop: "Ragi & Groundnut",
-    spatialScopeNote: "Mock spatial polygon for UI visualization; ML output is currently regional prototype scale."
-  },
-  {
-    id: "REG-MH-PUNE-BAR",
-    districtName: "Pune",
-    blockName: "Baramati",
-    state: "Maharashtra",
-    lat: 18.1517,
-    lng: 74.5786,
-    rainfallAnomaly: -28.9,
-    riskCategory: "BREAK_RISK",
-    riskLabel: "High Break Risk (-28.9 mm)",
-    color: "#EF4444", // Red
-    breakSpellProbability: "82%",
-    soilMoistureStatus: "24% (Severe Deficit)",
-    dominantCrop: "Sugarcane & Maize",
-    spatialScopeNote: "Mock spatial polygon for UI visualization; ML output is currently regional prototype scale."
-  },
-  {
-    id: "REG-MH-SAT-KRA",
-    districtName: "Satara",
-    blockName: "Karad",
-    state: "Maharashtra",
-    lat: 17.2844,
-    lng: 74.1849,
-    rainfallAnomaly: -8.1,
-    riskCategory: "BELOW_NORMAL",
-    riskLabel: "Mild Deficit (-8.1 mm)",
-    color: "#FACC15",
-    breakSpellProbability: "40%",
-    soilMoistureStatus: "52% (Moderate)",
-    dominantCrop: "Sugarcane",
-    spatialScopeNote: "Mock spatial polygon for UI visualization; ML output is currently regional prototype scale."
-  },
-  {
-    id: "REG-MH-NAS-NIP",
-    districtName: "Nashik",
-    blockName: "Niphad",
-    state: "Maharashtra",
-    lat: 20.0768,
-    lng: 74.1072,
-    rainfallAnomaly: +14.2,
-    riskCategory: "ABOVE_NORMAL",
-    riskLabel: "Above Normal (+14.2 mm)",
-    color: "#3B82F6", // Blue
-    breakSpellProbability: "15%",
-    soilMoistureStatus: "78% (Good)",
-    dominantCrop: "Grapes & Maize",
-    spatialScopeNote: "Mock spatial polygon for UI visualization; ML output is currently regional prototype scale."
-  },
-  {
     id: "REG-KA-BLR-DOD",
     districtName: "Bengaluru Rural",
     blockName: "Doddaballapura",
     state: "Karnataka",
-    lat: 13.2929,
-    lng: 77.5428,
-    rainfallAnomaly: +2.4,
+    lat: 13.29,
+    lng: 77.55,
+    rainfallAnomaly: -3.3,
     riskCategory: "NORMAL",
-    riskLabel: "Normal (+2.4 mm)",
+    riskLabel: "Normal Precipitation (-3.3%)",
     color: "#22C55E", // Green
-    breakSpellProbability: "20%",
-    soilMoistureStatus: "68% (Optimal)",
-    dominantCrop: "Ragi",
-    spatialScopeNote: "Mock spatial polygon for UI visualization; ML output is currently regional prototype scale."
+    breakSpellProbability: "15%",
+    soilMoistureStatus: "68% (Adequate)",
+    dominantCrop: "Ragi (Finger Millet)",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-MYS-NAN",
+    districtName: "Mysuru",
+    blockName: "Nanjangud",
+    state: "Karnataka",
+    lat: 12.30,
+    lng: 76.65,
+    rainfallAnomaly: -18.4,
+    riskCategory: "MODERATE",
+    riskLabel: "Moderate Deficit (-18.4%)",
+    color: "#EAB308", // Amber
+    breakSpellProbability: "60%",
+    soilMoistureStatus: "38% (Deficit)",
+    dominantCrop: "Maize & Cotton",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-BEL-GOK",
+    districtName: "Belagavi",
+    blockName: "Gokak",
+    state: "Karnataka",
+    lat: 15.85,
+    lng: 74.50,
+    rainfallAnomaly: -32.1,
+    riskCategory: "HIGH",
+    riskLabel: "High Deficit / Dry Alert (-32.1%)",
+    color: "#EF4444", // Red
+    breakSpellProbability: "82%",
+    soilMoistureStatus: "24% (Severe Deficit)",
+    dominantCrop: "Jowar & Maize",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-KAL-ALA",
+    districtName: "Kalaburagi",
+    blockName: "Aland",
+    state: "Karnataka",
+    lat: 17.33,
+    lng: 76.83,
+    rainfallAnomaly: +3.7,
+    riskCategory: "NORMAL",
+    riskLabel: "Normal Precipitation (+3.7%)",
+    color: "#22C55E", // Green
+    breakSpellProbability: "22%",
+    soilMoistureStatus: "62% (Optimal)",
+    dominantCrop: "Jowar & Groundnut",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-KOD-MAD",
+    districtName: "Kodagu (Madikeri)",
+    blockName: "Madikeri",
+    state: "Karnataka",
+    lat: 12.42,
+    lng: 75.74,
+    rainfallAnomaly: -12.7,
+    riskCategory: "MODERATE",
+    riskLabel: "Moderate Deficit / Break Risk (-12.7%)",
+    color: "#EAB308", // Amber
+    breakSpellProbability: "65%",
+    soilMoistureStatus: "52% (Moderate Stress)",
+    dominantCrop: "Coffee & Spices",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-BAL-SIR",
+    districtName: "Ballari",
+    blockName: "Siruguppa",
+    state: "Karnataka",
+    lat: 15.14,
+    lng: 76.92,
+    rainfallAnomaly: -22.0,
+    riskCategory: "MODERATE",
+    riskLabel: "Moderate Stress (-22.0%)",
+    color: "#EAB308", // Amber
+    breakSpellProbability: "55%",
+    soilMoistureStatus: "35% (Deficit)",
+    dominantCrop: "Cotton & Groundnut",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-DHA-HUB",
+    districtName: "Dharwad",
+    blockName: "Hubballi",
+    state: "Karnataka",
+    lat: 15.36,
+    lng: 75.12,
+    rainfallAnomaly: -8.5,
+    riskCategory: "NORMAL",
+    riskLabel: "Near Normal (-8.5%)",
+    color: "#22C55E", // Green
+    breakSpellProbability: "30%",
+    soilMoistureStatus: "58% (Normal)",
+    dominantCrop: "Jowar & Groundnut",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-SHI-SAG",
+    districtName: "Shivamogga",
+    blockName: "Sagara",
+    state: "Karnataka",
+    lat: 13.93,
+    lng: 75.57,
+    rainfallAnomaly: +12.4,
+    riskCategory: "ABOVE_NORMAL",
+    riskLabel: "Surplus Precipitation (+12.4%)",
+    color: "#3B82F6", // Blue
+    breakSpellProbability: "10%",
+    soilMoistureStatus: "82% (Saturated)",
+    dominantCrop: "Paddy & Arecanut",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
+  },
+  {
+    id: "REG-KA-VIJ-IND",
+    districtName: "Vijayapura",
+    blockName: "Indi",
+    state: "Karnataka",
+    lat: 16.83,
+    lng: 75.71,
+    rainfallAnomaly: -35.2,
+    riskCategory: "HIGH",
+    riskLabel: "High Deficit / Severe Stress (-35.2%)",
+    color: "#EF4444", // Red
+    breakSpellProbability: "85%",
+    soilMoistureStatus: "21% (Critical Deficit)",
+    dominantCrop: "Jowar & Maize",
+    spatialScopeNote: "Trained regional TFLite regression & multi-source meteorological ensemble."
   }
 ];
+

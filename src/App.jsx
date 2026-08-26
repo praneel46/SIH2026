@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { RoleProvider } from './context/RoleContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/layout/Navbar';
@@ -75,15 +76,18 @@ const AnimatedRoutes = () => {
           <Route path="/register" element={<PublicAuthRoute><Register /></PublicAuthRoute>} />
 
           {/* Protected Application Routes (Dashboard Layout Shell with Left Sidebar & Top Greeting Header) */}
-          <Route path="/dashboard" element={<ProtectedDashboardRoute><Dashboard /></ProtectedDashboardRoute>} />
-          <Route path="/predictions" element={<ProtectedDashboardRoute><Predictions /></ProtectedDashboardRoute>} />
-          <Route path="/risk-map" element={<ProtectedDashboardRoute><RiskMap /></ProtectedDashboardRoute>} />
-          <Route path="/advisory" element={<ProtectedDashboardRoute><Advisory /></ProtectedDashboardRoute>} />
-          <Route path="/history" element={<ProtectedDashboardRoute><History /></ProtectedDashboardRoute>} />
-          <Route path="/model-insights" element={<ProtectedDashboardRoute><ModelInsights /></ProtectedDashboardRoute>} />
+          <Route path="/dashboard" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
           <Route path="/farmer-dashboard" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
           <Route path="/officer-dashboard" element={<ProtectedDashboardRoute><OfficerDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/predictions" element={<ProtectedDashboardRoute><Predictions /></ProtectedDashboardRoute>} />
+          <Route path="/simulator" element={<ProtectedDashboardRoute><Predictions /></ProtectedDashboardRoute>} />
+          <Route path="/risk-map" element={<ProtectedDashboardRoute><RiskMap /></ProtectedDashboardRoute>} />
+          <Route path="/model-insights" element={<ProtectedDashboardRoute><ModelInsights /></ProtectedDashboardRoute>} />
+          <Route path="/model-spec" element={<ProtectedDashboardRoute><ModelInsights /></ProtectedDashboardRoute>} />
           <Route path="/admin-dashboard" element={<ProtectedDashboardRoute><AdminDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/system-status" element={<ProtectedDashboardRoute><AdminDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/advisory" element={<ProtectedDashboardRoute><FarmerDashboard /></ProtectedDashboardRoute>} />
+          <Route path="/history" element={<ProtectedDashboardRoute><OfficerDashboard /></ProtectedDashboardRoute>} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -93,15 +97,17 @@ const AnimatedRoutes = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <RoleProvider>
-        <AuthProvider>
-          <Router>
-            <MainLayout>
-              <AnimatedRoutes />
-            </MainLayout>
-          </Router>
-        </AuthProvider>
-      </RoleProvider>
+      <LanguageProvider>
+        <RoleProvider>
+          <AuthProvider>
+            <Router>
+              <MainLayout>
+                <AnimatedRoutes />
+              </MainLayout>
+            </Router>
+          </AuthProvider>
+        </RoleProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

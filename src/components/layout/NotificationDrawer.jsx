@@ -8,7 +8,7 @@ export const NotificationDrawer = ({ isOpen, onClose }) => {
       id: 1,
       type: 'warning',
       title: 'Monsoon Break Risk Alert',
-      message: 'High probability of dry spell (7+ days) detected in Baramati & Haveli blocks.',
+      message: 'High probability of severe dry spell (-46.9% deviation) detected in Bengaluru Rural & Kolar districts.',
       time: '12 mins ago',
       icon: AlertTriangle,
       color: 'text-amber-500 bg-amber-500/10 border-amber-500/20'
@@ -16,8 +16,8 @@ export const NotificationDrawer = ({ isOpen, onClose }) => {
     {
       id: 2,
       type: 'advisory',
-      title: 'New Crop Advisory Released',
-      message: 'Ragi soil moisture retention guidelines issued for Western Ghats agricultural belt.',
+      title: 'FAO-56 Crop Advisory Released',
+      message: 'Ragi soil moisture conservation & protective furrow guidelines issued for Southern Karnataka agro-climatic zone.',
       time: '1 hour ago',
       icon: Info,
       color: 'text-sky-500 bg-sky-500/10 border-sky-500/20'
@@ -25,8 +25,8 @@ export const NotificationDrawer = ({ isOpen, onClose }) => {
     {
       id: 3,
       type: 'system',
-      title: 'Model Ingest Completed',
-      message: 'DMI lag signals updated for August 2026 cycle. Scaler parameters synchronized.',
+      title: 'Meteorological Ensemble Ingested',
+      message: 'NOAA GFS, DWD ICON, and ECMWF IFS 16-day forecast feeds synchronized with SQLite audit layer.',
       time: '3 hours ago',
       icon: CheckCircle2,
       color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
