@@ -1,4 +1,4 @@
-# 🌦️ Weather Index
+# 🌦️ VarshaSetu
 
 <div align="center">
 
@@ -10,7 +10,7 @@ A modern climate intelligence platform designed to analyze rainfall anomalies, c
 
 <br/>
 
-![Weather Index](https://img.shields.io/badge/Weather-Index-00C8FF?style=for-the-badge&logo=icloud&logoColor=white)
+![VarshaSetu](https://img.shields.io/badge/VarshaSetu-Climate_Intelligence-00C8FF?style=for-the-badge&logo=icloud&logoColor=white)
 ![AI Powered](https://img.shields.io/badge/AI-Powered-7B61FF?style=for-the-badge&logo=openai&logoColor=white)
 ![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)

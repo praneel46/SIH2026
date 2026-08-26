@@ -151,7 +151,7 @@ export const NotificationDrawer = () => {
             {/* Footer */}
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">
               <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 block">
-                WEATHER INDEX • Hyperlocal Agricultural Alert Engine
+                VARSHA SETU • Hyperlocal Agricultural Alert Engine
               </span>
             </div>
           </motion.div>

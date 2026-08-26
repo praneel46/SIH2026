@@ -47,7 +47,7 @@ export const Navbar = () => {
             </div>
             <div>
               <span className="font-black tracking-tight text-lg text-white font-sans">
-                WEATHER <span className="text-sky-400">INDEX</span>
+                VARSHA <span className="text-sky-400">SETU</span>
               </span>
             </div>
           </Link>

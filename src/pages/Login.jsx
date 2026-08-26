@@ -39,7 +39,7 @@ export const Login = () => {
     } else {
       const res = loginFarmer(email, password);
       if (res.success) {
-        navigate('/dashboard');
+        navigate('/farmer-dashboard');
       }
     }
   };
@@ -47,7 +47,7 @@ export const Login = () => {
   const handleGoogleSignIn = () => {
     const res = loginWithGoogle();
     if (res.success) {
-      navigate('/dashboard');
+      navigate('/farmer-dashboard');
     }
   };
 
@@ -58,7 +58,7 @@ export const Login = () => {
       <div className="fixed inset-0 w-full h-full z-0 overflow-hidden pointer-events-none">
         <img
           src={authBg}
-          alt="Weather Index Climate Intelligence"
+          alt="VarshaSetu Climate Intelligence"
           className="w-full h-full object-cover object-center"
         />
       </div>
@@ -75,7 +75,7 @@ export const Login = () => {
               </div>
             </div>
             <span className="font-extrabold text-sm text-white tracking-tight">
-              WEATHER <span className="text-sky-400">INDEX</span>
+              VARSHA <span className="text-sky-400">SETU</span>
             </span>
           </Link>
         </div>
@@ -97,7 +97,7 @@ export const Login = () => {
             {/* Branding & Subtitles */}
             <div className="space-y-0.5">
               <h1 className="text-xl font-black text-white tracking-tight">
-                WEATHER <span className="text-sky-400">INDEX</span>
+                VARSHA <span className="text-sky-400">SETU</span>
               </h1>
               <p className="text-xs font-semibold text-slate-300">
                 AI-Powered Climate Intelligence
@@ -269,7 +269,7 @@ export const Login = () => {
           </div>
 
           <p className="text-[10px] text-slate-400 font-mono pt-1">
-            © 2026 Weather Index. All rights reserved.
+            © 2026 VarshaSetu. All rights reserved.
           </p>
         </div>
 

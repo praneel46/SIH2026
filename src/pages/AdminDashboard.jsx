@@ -93,11 +93,11 @@ export const AdminDashboard = () => {
         />
         <MetricCard
           title="SQLite Audit Log DB"
-          value="monsoon_predictions"
+          value="monsoon_predictions.db"
           unit="Active"
           status="prediction_database.py"
           icon={Database}
-          color="emerald"
+          color="amber"
         />
         <MetricCard
           title="Numerical Ensemble"

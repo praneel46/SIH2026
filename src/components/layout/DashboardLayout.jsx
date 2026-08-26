@@ -35,9 +35,11 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useRole } from '../../context/RoleContext';
 
+import { ReportPreviewModal } from '../common/ReportPreviewModal';
+
 export const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
-  const { role, setRole, selectedLocation, setSelectedLocation } = useRole();
+  const { role, setRole, selectedLocation, setSelectedLocation, selectedCrop } = useRole();
   const { unreadCount, setIsDrawerOpen } = useNotifications();
   const { t } = useLanguage();
   const location = useLocation();
@@ -46,19 +48,29 @@ export const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const sidebarNavItems = [
+  const activeRole = role || user?.role || 'farmer';
+  const isOfficerUser = activeRole === 'officer' || activeRole === 'Officer';
+
+  const rawNavItems = [
     { name: t('dashboardOverview') || 'Monsoon & Crop Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: t('cropAdvisoryGuidance') || 'Crop Water Advisory', path: '/advisory', icon: Sprout },
     { name: t('karnatakaRiskMap') || 'Karnataka Risk Map', path: '/risk-map', icon: AlertTriangle },
-    { name: t('farmerAdvisory') || 'Farmer Extension Outlook', path: '/farmer-dashboard', icon: Droplets },
-    { name: t('officerTelemetry') || 'Extension Officer Telemetry', path: '/officer-dashboard', icon: Radio },
+    { name: t('farmerAdvisory') || 'Farmer Extension Outlook', path: '/farmer-dashboard', icon: Droplets, farmerOnly: true },
+    { name: t('officerTelemetry') || 'Extension Officer Telemetry', path: '/officer-dashboard', icon: Radio, officerOnly: true },
     { name: t('scenarioSimulator') || 'Scenario Simulator', path: '/predictions', icon: BarChart3 },
     { name: t('modelSpecification') || 'Model Specification', path: '/model-insights', icon: BrainCircuit },
     { name: t('predictionHistory') || 'Prediction History', path: '/history', icon: FileText },
     { name: t('systemStatus') || 'System Status', path: '/admin-dashboard', icon: Settings },
   ];
+
+  const sidebarNavItems = rawNavItems.filter(item => {
+    if (isOfficerUser && item.farmerOnly) return false;
+    if (!isOfficerUser && item.officerOnly) return false;
+    return true;
+  });
 
   // Extract flat locations list for location search
   const availableLocations = [];
@@ -119,7 +131,7 @@ export const DashboardLayout = ({ children }) => {
               {!isCollapsed && (
                 <div className="whitespace-nowrap transition-opacity duration-200">
                   <span className="font-extrabold text-base text-slate-900 dark:text-white tracking-tight block">
-                    WEATHER <span className="text-sky-500 dark:text-sky-400">INDEX</span>
+                    VARSHA <span className="text-sky-500 dark:text-sky-400">SETU</span>
                   </span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Climate Intelligence</span>
                 </div>
@@ -205,7 +217,7 @@ export const DashboardLayout = ({ children }) => {
           <div className="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-500">
             <CloudRain className="w-4 h-4" />
           </div>
-          <span className="font-black text-sm text-slate-900 dark:text-white">WEATHER <span className="text-sky-500 dark:text-sky-400">INDEX</span></span>
+          <span className="font-black text-sm text-slate-900 dark:text-white">VARSHA <span className="text-sky-500 dark:text-sky-400">SETU</span></span>
         </Link>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -403,8 +415,8 @@ export const DashboardLayout = ({ children }) => {
 
             {/* Download Report CTA Button */}
             <button 
-              onClick={() => generateClimateReport(selectedLocation, selectedCrop, null)}
-              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all hover:scale-[1.02] flex items-center space-x-2"
+              onClick={() => setIsReportModalOpen(true)}
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all hover:scale-[1.02] flex items-center space-x-2 shrink-0 cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>{t('downloadReport')}</span>
@@ -416,6 +428,14 @@ export const DashboardLayout = ({ children }) => {
 
         {/* Dynamic Notification Drawer */}
         <NotificationDrawer />
+
+        {/* Real PDF Report Preview Modal */}
+        <ReportPreviewModal 
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          location={selectedLocation}
+          crop={selectedCrop}
+        />
 
         {/* Dashboard Content Injector */}
         <main className="p-6 space-y-6 flex-1 bg-slate-50 dark:bg-[#04060E] transition-colors">

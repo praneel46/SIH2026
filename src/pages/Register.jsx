@@ -73,7 +73,7 @@ export const Register = () => {
               </div>
             </div>
             <span className="font-extrabold text-sm text-white tracking-tight">
-              WEATHER <span className="text-sky-400">INDEX</span>
+              VARSHA <span className="text-sky-400">SETU</span>
             </span>
           </Link>
         </div>
@@ -95,7 +95,7 @@ export const Register = () => {
             {/* Branding & Subtitles */}
             <div className="space-y-0.5">
               <h1 className="text-xl font-black text-white tracking-tight">
-                WEATHER <span className="text-sky-400">INDEX</span>
+                VARSHA <span className="text-sky-400">SETU</span>
               </h1>
               <p className="text-xs font-semibold text-slate-300">
                 Create Your Account
@@ -256,7 +256,7 @@ export const Register = () => {
           </div>
 
           <p className="text-[10px] text-slate-400 font-mono pt-1">
-            © 2026 Weather Index. All rights reserved.
+            © 2026 VarshaSetu. All rights reserved.
           </p>
         </div>
 

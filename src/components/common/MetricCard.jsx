@@ -24,12 +24,18 @@ export const MetricCard = ({ title, value, unit, status, icon: Icon, trend, colo
         )}
       </div>
 
-      <div className="mt-4 flex items-baseline space-x-2">
-        <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
+      <div className="mt-4 flex items-baseline space-x-2 min-w-0 flex-wrap">
+        <span className={`font-extrabold tracking-tight text-slate-900 dark:text-white font-mono break-all min-w-0 ${
+          typeof value === 'string' && value.length > 15 
+            ? 'text-sm sm:text-base' 
+            : typeof value === 'string' && value.length > 10 
+            ? 'text-lg sm:text-xl' 
+            : 'text-2xl sm:text-3xl'
+        }`}>
           {value}
         </span>
         {unit && (
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0">
             {unit}
           </span>
         )}

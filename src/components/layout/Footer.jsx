@@ -57,7 +57,7 @@ export const Footer = () => {
                 <CloudRain className="w-5 h-5 text-white" />
               </div>
               <span className="font-extrabold text-xl text-white font-sans tracking-tight">
-                WEATHER <span className="text-sky-400">INDEX</span>
+                VARSHA <span className="text-sky-400">SETU</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
@@ -128,7 +128,7 @@ export const Footer = () => {
 
         {/* Footer Bottom Bar (SIH identifier removed) */}
         <div className="mt-14 pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500">
-          <p>© 2026 Weather Index. All rights reserved.</p>
+          <p>© 2026 VarshaSetu. All rights reserved.</p>
         </div>
       </div>
 
