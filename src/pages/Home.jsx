@@ -123,7 +123,7 @@ export const Home = () => {
             {/* CTA Buttons (Neumorphic + Glassmorphic Blend) */}
             <motion.div variants={itemFadeUp} className="flex flex-wrap items-center gap-4 pt-1">
               <Link
-                to="/login"
+                to="/dashboard"
                 className="px-7 py-3 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_30px_rgba(56,189,248,0.5)] hover:scale-[1.03] active:scale-98 transition-all flex items-center space-x-2 neu-button"
               >
                 <span>Get Started</span>
@@ -417,7 +417,7 @@ export const Home = () => {
 
           <div className="shrink-0">
             <Link
-              to="/login"
+              to="/dashboard"
               className="px-7 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:scale-105 transition-all neu-button"
             >
               <span>Get Started</span>

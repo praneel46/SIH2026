@@ -45,9 +45,9 @@ export const History = () => {
         district: districtFilter === 'ALL' ? null : districtFilter,
         limit: 50
       });
-
-      if (res.success && res.data && res.data.length > 0) {
-        setRecords(res.data);
+      const historyList = res.records || res.data || [];
+      if (res.success && historyList.length > 0) {
+        setRecords(historyList);
       } else {
         // Prototype seed records if database is empty on fresh local dev
         setRecords([

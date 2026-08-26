@@ -76,67 +76,81 @@ export const RiskMap = () => {
   const [filterRisk, setFilterRisk] = useState('ALL');
   const [loading, setLoading] = useState(true);
 
-  // Parallel fetch: query POST /api/v1/predict-monsoon for all Karnataka districts
+  // Parallel fetch: query POST /api/v1/predict-monsoon with caching for instant rendering
   const fetchAllDistrictRisks = async () => {
-    setLoading(true);
-    try {
-      const promises = KARNATAKA_DISTRICTS.map(async (dist) => {
-        try {
-          const res = await apiService.evaluatePrediction({
-            latitude: dist.lat,
-            longitude: dist.lon,
-            month: new Date().getMonth() + 1,
-            crop_type: selectedCrop?.key || 'ragi',
-            dmi: CURRENT_CYCLE_INDICES.dmi,
-            oni: CURRENT_CYCLE_INDICES.oni,
-            mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
-            mjo_amplitude: CURRENT_CYCLE_INDICES.mjo_amplitude
-          });
-
-          if (res.success && res.data) {
-            const d = res.data;
-            return {
-              id: dist.id,
-              name: dist.name,
-              lat: dist.lat,
-              lon: dist.lon,
-              riskCategory: d.riskCategory || 'NORMAL',
-              predictedMonthlyRainfall: d.predictedMonthlyRainfall ?? 85.0,
-              forecast14DayRainfall: d.forecast14DayRainfall ?? 22.0,
-              historicalBaseline: d.historicalBaseline ?? 110.0,
-              deviationPct: d.deviationPct ?? -15.0,
-              drySpellWarning: d.drySpellWarning ?? false,
-              advisory_en: d.advisory?.english || 'Standard seasonal practices recommended.',
-              advisory_kn: d.advisory?.kannada || 'ಸಾಮಾನ್ಯ ಬಿತ್ತನೆ ಮತ್ತು ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಮುಂದುವರಿಸಿ.'
-            };
-          }
-        } catch (e) {
-          console.warn(`Fallback for district ${dist.name}:`, e);
+    const cacheKey = `wi_risk_map_${selectedCrop?.key || 'ragi'}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.length > 0) {
+          setDistrictData(parsed);
+          setLoading(false);
         }
+      } catch {}
+    } else {
+      setLoading(true);
+    }
 
-        // Fallback default
-        const mockMatch = mockRiskData.find(m => m.district === dist.name) || {};
-        return {
-          id: dist.id,
-          name: dist.name,
-          lat: dist.lat,
-          lon: dist.lon,
-          riskCategory: mockMatch.riskCategory || 'NORMAL',
-          predictedMonthlyRainfall: mockMatch.predictedRainfall || 75.0,
-          forecast14DayRainfall: 18.5,
-          historicalBaseline: mockMatch.historicalNormal || 115.0,
-          deviationPct: mockMatch.anomalyPercentage || -10.0,
-          drySpellWarning: mockMatch.riskCategory === 'HIGH',
-          advisory_en: mockMatch.advisorySummary || 'Standard moisture management.',
-          advisory_kn: 'ತೇವಾಂಶ ಸಂರಕ್ಷಣಾ ಕ್ರಮಗಳನ್ನು ಕೈಗೊಳ್ಳಿ.'
-        };
-      });
+    try {
+      const results = await Promise.all(
+        KARNATAKA_DISTRICTS.map(async (dist) => {
+          try {
+            const res = await apiService.evaluatePrediction({
+              latitude: dist.lat,
+              longitude: dist.lon,
+              month: new Date().getMonth() + 1,
+              crop_type: selectedCrop?.key || 'ragi',
+              dmi: CURRENT_CYCLE_INDICES.dmi,
+              oni: CURRENT_CYCLE_INDICES.oni,
+              mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
+              mjo_amplitude: CURRENT_CYCLE_INDICES.mjo_amplitude
+            });
 
-      const results = await Promise.all(promises);
-      setDistrictData(results);
+            if (res.success && res.data) {
+              const d = res.data;
+              return {
+                id: dist.id,
+                name: dist.name,
+                lat: dist.lat,
+                lon: dist.lon,
+                riskCategory: d.riskCategory || 'NORMAL',
+                predictedMonthlyRainfall: d.predictedMonthlyRainfall ?? 85.0,
+                forecast14DayRainfall: d.forecast14DayRainfall ?? 22.0,
+                historicalBaseline: d.historicalBaseline ?? 110.0,
+                deviationPct: d.deviationPct ?? -15.0,
+                drySpellWarning: d.drySpellWarning ?? false,
+                advisory_en: d.advisory?.english || 'Standard seasonal practices recommended.',
+                advisory_kn: d.advisory?.kannada || 'ಸಾಮಾನ್ಯ ಬಿತ್ತನೆ ಮತ್ತು ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಮುಂದುವರಿಸಿ.'
+              };
+            }
+          } catch (e) {
+            console.warn(`Fallback for district ${dist.name}:`, e);
+          }
+
+          return {
+            id: dist.id,
+            name: dist.name,
+            lat: dist.lat,
+            lon: dist.lon,
+            riskCategory: 'NORMAL',
+            predictedMonthlyRainfall: 116.5,
+            forecast14DayRainfall: 21.2,
+            historicalBaseline: 137.1,
+            deviationPct: -15.0,
+            drySpellWarning: false,
+            advisory_en: 'Seasonal crop guidance active.',
+            advisory_kn: 'ಋತುಮಾನದ ಬೆಳೆ ಸಲಹೆ ಸಕ್ರಿಯವಾಗಿದೆ.'
+          };
+        })
+      );
+
+      const validResults = results.filter(Boolean);
+      setDistrictData(validResults);
+      sessionStorage.setItem(cacheKey, JSON.stringify(validResults));
 
       // Match with current global selectedLocation or default to Bengaluru Rural
-      const initialMatch = results.find(r => r.name.toLowerCase() === (selectedLocation.district || '').toLowerCase()) || results[0];
+      const initialMatch = validResults.find(r => r.name.toLowerCase() === (selectedLocation.district || '').toLowerCase()) || validResults[0];
       setActiveDistrict(initialMatch);
     } catch (err) {
       console.error('Failed to load multi-district risk map:', err);

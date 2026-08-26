@@ -93,6 +93,27 @@ export const Advisory = () => {
     );
   }
 
+  if (error || !prediction) {
+    return (
+      <div className="p-8 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl text-center space-y-4 max-w-xl mx-auto my-12 font-sans">
+        <AlertTriangle className="w-10 h-10 text-rose-500 mx-auto" />
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          {language === 'kn' ? 'ಸಲಹಾ ಮಾಹಿತಿ ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ' : 'Unable to Fetch Farm Advisory'}
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {error || 'Unable to connect to live monsoon prediction service.'}
+        </p>
+        <button
+          onClick={fetchAdvisoryData}
+          className="px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 inline-flex items-center space-x-2 transition-all active:scale-95"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>{language === 'kn' ? 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ' : 'Retry Connection'}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans">
       

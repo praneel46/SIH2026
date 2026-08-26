@@ -48,20 +48,19 @@ export const Dashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Real live API call to POST /api/v1/predict-monsoon via apiService
-      const predRes = await apiService.evaluatePrediction({
-        latitude: selectedLocation.lat || 13.29,
-        longitude: selectedLocation.lon || 77.55,
-        month: new Date().getMonth() + 1,
-        crop_type: selectedCrop?.key || 'ragi',
-        dmi: CURRENT_CYCLE_INDICES.dmi,
-        oni: CURRENT_CYCLE_INDICES.oni,
-        mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
-        mjo_amplitude: CURRENT_CYCLE_INDICES.mjo_amplitude
-      });
-
-      // 2. Load anomaly trends
-      const trendRes = await apiService.getAnomalyTrends(selectedLocation.district);
+      const [predRes, trendRes] = await Promise.all([
+        apiService.evaluatePrediction({
+          latitude: selectedLocation.lat || 13.29,
+          longitude: selectedLocation.lon || 77.55,
+          month: new Date().getMonth() + 1,
+          crop_type: selectedCrop?.key || 'ragi',
+          dmi: CURRENT_CYCLE_INDICES.dmi,
+          oni: CURRENT_CYCLE_INDICES.oni,
+          mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
+          mjo_amplitude: CURRENT_CYCLE_INDICES.mjo_amplitude
+        }),
+        apiService.getAnomalyTrends(selectedLocation.district)
+      ]);
 
       if (predRes.success && predRes.data) {
         setPrediction(predRes.data);

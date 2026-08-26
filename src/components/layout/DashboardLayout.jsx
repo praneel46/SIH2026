@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useRole } from '../../context/RoleContext';
 import { mockLocations } from '../../data/mock/mockLocations';
+import { generateClimateReport } from '../../utils/reportGenerator';
 import { 
   CloudRain, 
   LayoutDashboard, 
@@ -33,6 +33,7 @@ import { LanguageToggle } from './LanguageToggle';
 import { NotificationDrawer } from './NotificationDrawer';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRole } from '../../context/RoleContext';
 
 export const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -402,7 +403,7 @@ export const DashboardLayout = ({ children }) => {
 
             {/* Download Report CTA Button */}
             <button 
-              onClick={() => alert("Downloading Report for " + selectedLocation.district)}
+              onClick={() => generateClimateReport(selectedLocation, selectedCrop, null)}
               className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all hover:scale-[1.02] flex items-center space-x-2"
             >
               <FileText className="w-3.5 h-3.5" />

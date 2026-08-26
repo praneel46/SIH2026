@@ -72,7 +72,7 @@ export const Footer = () => {
               <li><a href="#capabilities" className="hover:text-sky-400 transition-colors">Features</a></li>
               <li><a href="#how-it-works" className="hover:text-sky-400 transition-colors">How It Works</a></li>
               <li><Link to="/login" className="hover:text-sky-400 transition-colors">Platform Login</Link></li>
-              <li><Link to="/login" className="hover:text-sky-400 transition-colors">Get Started</Link></li>
+              <li><Link to="/dashboard" className="hover:text-sky-400 transition-colors">Get Started</Link></li>
             </ul>
           </div>
 

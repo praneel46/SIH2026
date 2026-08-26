@@ -267,7 +267,7 @@ export const FarmerDashboard = () => {
                 {language === 'kn' ? risk.badge_kn : risk.badge}
               </span>
               <span className="text-xs font-semibold opacity-75">
-                {selectedDistrict.name} • {CURRENT_CYCLE_INDICES.cycleLabel}
+                {selectedLocation.district} • {CURRENT_CYCLE_INDICES.cycleLabel}
               </span>
             </div>
 
@@ -427,7 +427,7 @@ export const FarmerDashboard = () => {
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs text-slate-700 dark:text-slate-300 space-y-1">
               <span className="font-bold text-sky-600 dark:text-sky-400">[SIH-MONSOON-KA]</span>
               <p>
-                {selectedDistrict.name}: {language === 'kn' ? risk.title_kn : risk.title_en}. {selectedCrop.name}: {language === 'kn' ? prediction?.advisory?.kannada : prediction?.advisory?.english}
+                {selectedLocation.district}: {language === 'kn' ? risk.title_kn : risk.title_en}. {selectedCrop?.name || 'Ragi'}: {language === 'kn' ? prediction?.advisory?.kannada : prediction?.advisory?.english}
               </p>
             </div>
           </motion.div>

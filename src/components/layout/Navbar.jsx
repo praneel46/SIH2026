@@ -75,7 +75,7 @@ export const Navbar = () => {
           {/* Right Action Button */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
-              to="/login"
+              to="/dashboard"
               className="px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold text-xs shadow-[0_0_25px_rgba(56,189,248,0.35)] transition-all hover:scale-[1.03] active:scale-98 flex items-center space-x-2"
             >
               <span>Get Started</span>

@@ -71,8 +71,9 @@ export const OfficerDashboard = () => {
         district: selectedLocation.district,
         limit: 10
       });
-      if (res.success && res.data) {
-        setHistoryLogs(res.data);
+      const logsList = res.records || res.data || [];
+      if (res.success && logsList) {
+        setHistoryLogs(logsList);
       }
     } catch (err) {
       console.error('History Fetch Error:', err);
@@ -89,7 +90,7 @@ export const OfficerDashboard = () => {
   const handleCopyBulletin = () => {
     if (!ensembleData) return;
     const text = `[GOVT OF KARNATAKA - AGRONOMIC ADVISORY]
-District: ${selectedDistrict.name} | Crop: ${selectedCrop.name}
+District: ${selectedLocation.district} | Crop: ${selectedCrop?.name || 'Ragi'}
 Risk Assessment: ${ensembleData.risk_assessment?.risk_category} (Dry Spell Warning: ${ensembleData.risk_assessment?.dry_spell_warning ? 'Active' : 'No'})
 Multi-Model 16-Day Rainfall: ${ensembleData.prediction_synthesis?.combined_prediction_mm?.toFixed(1)} mm (Spread: ${ensembleData.multi_model_ensemble?.spread_mm?.toFixed(1)} mm)
 Crop ETc Water Balance: ${ensembleData.crop_water_analysis?.water_balance_mm?.toFixed(1)} mm (${ensembleData.crop_water_analysis?.water_status})
@@ -383,7 +384,7 @@ Advisory (KN): ${ensembleData.agronomic_advisory?.advisory_kn}`;
                 </h3>
               </div>
               <span className="text-xs font-mono text-slate-400">
-                District: {selectedDistrict.name}
+                District: {selectedLocation.district}
               </span>
             </div>
 
@@ -391,7 +392,7 @@ Advisory (KN): ${ensembleData.agronomic_advisory?.advisory_kn}`;
               <p className="text-xs text-slate-400 animate-pulse">Loading SQLite logs...</p>
             ) : historyLogs.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
-                No past logs recorded yet for {selectedDistrict.name}. Triggering ensemble checks automatically writes persistent audit records.
+                No past logs recorded yet for {selectedLocation.district}. Triggering ensemble checks automatically writes persistent audit records.
               </div>
             ) : (
               <div className="overflow-x-auto">

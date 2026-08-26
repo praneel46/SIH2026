@@ -245,20 +245,60 @@ def fetch_reference_et0(lat: float, lon: float, days: int = 16) -> float:
         print(f"Warning: Failed to fetch ET0 data: {e}")
     return 0.0
 
+from concurrent.futures import ThreadPoolExecutor
+
 def fetch_ensemble_forecast(lat: float, lon: float, days: int = 16) -> Dict[str, Any]:
     """
-    Fetches 16-day forecasts from NOAA GFS, DWD ICON, and ECMWF IFS.
-    Quantifies multi-model spread (max - min) and determines model agreement category.
-    Also fetches 16-day cumulative reference evapotranspiration (ET0).
+    Fetches 16-day forecasts from NOAA GFS, DWD ICON, and ECMWF IFS in a single batch API request,
+    with concurrent fallback to ensure maximum resiliency and sub-second execution performance.
     """
-    # 1. NOAA GFS
-    gfs_val = fetch_single_model_forecast(lat, lon, "gfs_seamless", days)
-    # 2. DWD ICON
-    icon_val = fetch_single_model_forecast(lat, lon, "icon_seamless", days)
-    # 3. ECMWF IFS (try ifs025 first, fallback to ifs04)
-    ecmwf_val = fetch_single_model_forecast(lat, lon, "ecmwf_ifs025", days)
-    if ecmwf_val is None:
-        ecmwf_val = fetch_single_model_forecast(lat, lon, "ecmwf_ifs04", days)
+    url = (
+        f"https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}&daily=precipitation_sum,et0_fao_evapotranspiration"
+        f"&timezone=auto&forecast_days={min(days, 16)}&models=gfs_seamless,icon_seamless,ecmwf_ifs025"
+    )
+    gfs_val, icon_val, ecmwf_val, et0_val = None, None, None, 0.0
+
+    try:
+        response = requests.get(url, timeout=6)
+        if response.status_code == 200:
+            data = response.json().get("daily", {})
+
+            gfs_list = data.get("precipitation_sum_gfs_seamless", [])
+            gfs_valid = [float(v) for v in gfs_list if v is not None]
+            if gfs_valid:
+                gfs_val = round(sum(gfs_valid), 2)
+
+            icon_list = data.get("precipitation_sum_icon_seamless", [])
+            icon_valid = [float(v) for v in icon_list if v is not None]
+            if icon_valid:
+                icon_val = round(sum(icon_valid), 2)
+
+            ecmwf_list = data.get("precipitation_sum_ecmwf_ifs025", [])
+            ecmwf_valid = [float(v) for v in ecmwf_list if v is not None]
+            if ecmwf_valid:
+                ecmwf_val = round(sum(ecmwf_valid), 2)
+
+            et0_list = data.get("et0_fao_evapotranspiration_gfs_seamless", []) or data.get("et0_fao_evapotranspiration_icon_seamless", [])
+            et0_valid = [float(v) for v in et0_list if v is not None]
+            if et0_valid:
+                et0_val = round(sum(et0_valid), 2)
+
+    except Exception as e:
+        print(f"Batch ensemble fetch error: {e}")
+
+    # Concurrent fallback for any missing individual model
+    if gfs_val is None or icon_val is None or ecmwf_val is None:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            fut_gfs = executor.submit(fetch_single_model_forecast, lat, lon, "gfs_seamless", days) if gfs_val is None else None
+            fut_icon = executor.submit(fetch_single_model_forecast, lat, lon, "icon_seamless", days) if icon_val is None else None
+            fut_ecmwf = executor.submit(fetch_single_model_forecast, lat, lon, "ecmwf_ifs025", days) if ecmwf_val is None else None
+            fut_et0 = executor.submit(fetch_reference_et0, lat, lon, days) if et0_val == 0.0 else None
+
+            if fut_gfs: gfs_val = fut_gfs.result()
+            if fut_icon: icon_val = fut_icon.result()
+            if fut_ecmwf: ecmwf_val = fut_ecmwf.result()
+            if fut_et0: et0_val = fut_et0.result() or 0.0
 
     valid_forecasts = [v for v in [gfs_val, icon_val, ecmwf_val] if v is not None]
     sources_count = len(valid_forecasts)
@@ -266,20 +306,14 @@ def fetch_ensemble_forecast(lat: float, lon: float, days: int = 16) -> Dict[str,
     if sources_count > 0:
         ensemble_avg = sum(valid_forecasts) / sources_count
     else:
-        # Fallback to standard open-meteo best-match if individual models fail
         fallback = fetch_single_model_forecast(lat, lon, "best_match", days)
         ensemble_avg = fallback if fallback is not None else 0.0
         sources_count = 1 if fallback is not None else 0
 
-    # Multi-Model Spread & Uncertainty Quantification (Bug 2 Fix)
     if sources_count >= 2:
         spread_mm = round(max(valid_forecasts) - min(valid_forecasts), 2)
         spread_ratio = spread_mm / ensemble_avg if ensemble_avg > 0 else 0.0
 
-        # Spread relative to ensemble mean:
-        # > 60% relative spread = LOW agreement (high forecast uncertainty)
-        # 25% - 60% relative spread = MODERATE agreement
-        # <= 25% relative spread = HIGH agreement (strong model consensus)
         if spread_ratio > 0.60:
             model_agreement = "LOW"
             agreement_note = "Meteorological sources show significant disagreement for this forecast window - treat this prediction with additional caution."
@@ -297,9 +331,6 @@ def fetch_ensemble_forecast(lat: float, lon: float, days: int = 16) -> Dict[str,
         spread_mm = 0.0
         model_agreement = "UNAVAILABLE"
         agreement_note = "Forecast data temporarily unavailable from all meteorological sources."
-
-    # Reference Evapotranspiration (ET0) via FAO Penman-Monteith
-    et0_val = fetch_reference_et0(lat, lon, days)
 
     return {
         "gfs_forecast_mm": gfs_val,
