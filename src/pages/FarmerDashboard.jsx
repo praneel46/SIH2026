@@ -5,6 +5,7 @@ import { mockCrops } from '../data/mock/mockCrops';
 import { KARNATAKA_DISTRICTS } from '../data/mock/mockLocations';
 import { CURRENT_CYCLE_INDICES } from '../config/currentCycleIndices';
 import { useLanguage } from '../context/LanguageContext';
+import { useRole } from '../context/RoleContext';
 import { 
   CloudRain, 
   AlertTriangle, 
@@ -24,8 +25,7 @@ import {
 
 export const FarmerDashboard = () => {
   const { language, setLanguage, t } = useLanguage();
-  const [selectedDistrict, setSelectedDistrict] = useState(KARNATAKA_DISTRICTS[2]); // Bengaluru Rural
-  const [selectedCrop, setSelectedCrop] = useState(mockCrops[0]); // Ragi
+  const { selectedLocation, setSelectedLocation, selectedCrop, setSelectedCrop } = useRole();
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,10 +35,10 @@ export const FarmerDashboard = () => {
     setError(null);
     try {
       const res = await apiService.evaluatePrediction({
-        latitude: selectedDistrict.lat,
-        longitude: selectedDistrict.lon,
+        latitude: selectedLocation.lat || 13.29,
+        longitude: selectedLocation.lon || 77.55,
         month: new Date().getMonth() + 1,
-        crop_type: selectedCrop.key,
+        crop_type: selectedCrop?.key || 'ragi',
         dmi: CURRENT_CYCLE_INDICES.dmi,
         oni: CURRENT_CYCLE_INDICES.oni,
         mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
@@ -60,7 +60,7 @@ export const FarmerDashboard = () => {
 
   useEffect(() => {
     fetchFarmerAdvisory();
-  }, [selectedDistrict, selectedCrop]);
+  }, [selectedLocation, selectedCrop]);
 
   // Plain-Language Risk Interpretation
   const getRiskDetails = (riskCategory, drySpellWarning) => {
@@ -177,15 +177,22 @@ export const FarmerDashboard = () => {
               <span>{language === 'kn' ? 'ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ (District)' : 'Select District'}</span>
             </label>
             <select
-              value={selectedDistrict.id}
+              value={selectedLocation.district}
               onChange={(e) => {
-                const d = KARNATAKA_DISTRICTS.find(x => x.id === e.target.value);
-                if (d) setSelectedDistrict(d);
+                const d = KARNATAKA_DISTRICTS.find(x => x.name === e.target.value || x.id === e.target.value);
+                if (d) {
+                  setSelectedLocation(prev => ({
+                    ...prev,
+                    district: d.name,
+                    lat: d.lat,
+                    lon: d.lon
+                  }));
+                }
               }}
               className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:border-sky-500 transition-colors"
             >
               {KARNATAKA_DISTRICTS.map((d) => (
-                <option key={d.id} value={d.id}>
+                <option key={d.id} value={d.name}>
                   {d.name} ({d.lat}° N, {d.lon}° E)
                 </option>
               ))}
@@ -200,7 +207,7 @@ export const FarmerDashboard = () => {
             </label>
             <div className="grid grid-cols-5 gap-2">
               {mockCrops.map((c) => {
-                const isSelected = selectedCrop.key === c.key;
+                const isSelected = (selectedCrop?.key || 'ragi') === c.key;
                 return (
                   <button
                     key={c.key}
@@ -230,7 +237,7 @@ export const FarmerDashboard = () => {
             <CloudRain className="w-5 h-5" />
           </div>
           <p className="text-xs font-mono text-slate-500 dark:text-slate-400 animate-pulse">
-            {language === 'kn' ? 'ಹವಾಮಾನ ಮುನ್ಸೂಚನೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ...' : 'Generating forecast for ' + selectedDistrict.name + '...'}
+            {language === 'kn' ? 'ಹವಾಮಾನ ಮುನ್ಸೂಚನೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ...' : 'Generating forecast for ' + selectedLocation.district + '...'}
           </p>
         </div>
       ) : error ? (

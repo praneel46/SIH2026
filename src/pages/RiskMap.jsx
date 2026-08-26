@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { KARNATAKA_DISTRICTS } from '../data/mock/mockLocations';
+import { mockCrops } from '../data/mock/mockCrops';
 import { mockRiskData } from '../data/mock/mockRiskData';
 import { CURRENT_CYCLE_INDICES } from '../config/currentCycleIndices';
 import { useLanguage } from '../context/LanguageContext';
+import { useRole } from '../context/RoleContext';
+import { evaluateCropWaterIntelligence } from '../services/cropWaterIntelligence';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { 
   MapPin, 
@@ -17,37 +21,62 @@ import {
   ShieldCheck, 
   TrendingDown, 
   TrendingUp, 
-  Globe 
+  Globe,
+  Droplets,
+  ArrowRight,
+  ExternalLink,
+  CheckCircle2,
+  Calendar,
+  Waves
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// SVG pin generator for Leaflet markers
-const createCustomPin = (color) => {
+// SVG pin generator with distinct selected active glow state
+const createCustomPin = (color, isSelected = false) => {
+  const size = isSelected ? 44 : 34;
+  const anchorX = isSelected ? 22 : 17;
+  const anchorY = isSelected ? 44 : 34;
+
   const svgString = `
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="${color}" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">
+    <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="${isSelected ? '#38BDF8' : '#ffffff'}" stroke-width="${isSelected ? '2.5' : '1.8'}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px ${isSelected ? '4px 8px' : '2px 4px'} ${isSelected ? 'rgba(56,189,248,0.6)' : 'rgba(0,0,0,0.4)'});">
+      ${isSelected ? `<circle cx="12" cy="9" r="8" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.9"/>` : ''}
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `;
+
   return L.divIcon({
-    className: 'custom-leaflet-pin',
+    className: `custom-leaflet-pin ${isSelected ? 'pin-selected' : ''}`,
     html: svgString,
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
-    popupAnchor: [0, -30]
+    iconSize: [size, size],
+    iconAnchor: [anchorX, anchorY],
+    popupAnchor: [0, -anchorY + 4]
   });
 };
 
+// Map Recenter Component
+const MapRecenter = ({ lat, lon }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (lat && lon) {
+      map.flyTo([lat, lon], map.getZoom(), { duration: 0.8 });
+    }
+  }, [lat, lon, map]);
+  return null;
+};
+
 export const RiskMap = () => {
+  const navigate = useNavigate();
   const { language, t } = useLanguage();
+  const { selectedLocation, setSelectedLocation, selectedCrop, setSelectedCrop } = useRole();
+
   const [districtData, setDistrictData] = useState([]);
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [activeDistrict, setActiveDistrict] = useState(null);
   const [filterRisk, setFilterRisk] = useState('ALL');
   const [loading, setLoading] = useState(true);
-  const [cropFilter, setCropFilter] = useState('ragi');
 
-  // Parallel fetch: query POST /api/v1/predict-monsoon for all 18 Karnataka districts
+  // Parallel fetch: query POST /api/v1/predict-monsoon for all Karnataka districts
   const fetchAllDistrictRisks = async () => {
     setLoading(true);
     try {
@@ -57,7 +86,7 @@ export const RiskMap = () => {
             latitude: dist.lat,
             longitude: dist.lon,
             month: new Date().getMonth() + 1,
-            crop_type: cropFilter,
+            crop_type: selectedCrop?.key || 'ragi',
             dmi: CURRENT_CYCLE_INDICES.dmi,
             oni: CURRENT_CYCLE_INDICES.oni,
             mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase,
@@ -73,6 +102,7 @@ export const RiskMap = () => {
               lon: dist.lon,
               riskCategory: d.riskCategory || 'NORMAL',
               predictedMonthlyRainfall: d.predictedMonthlyRainfall ?? 85.0,
+              forecast14DayRainfall: d.forecast14DayRainfall ?? 22.0,
               historicalBaseline: d.historicalBaseline ?? 110.0,
               deviationPct: d.deviationPct ?? -15.0,
               drySpellWarning: d.drySpellWarning ?? false,
@@ -93,6 +123,7 @@ export const RiskMap = () => {
           lon: dist.lon,
           riskCategory: mockMatch.riskCategory || 'NORMAL',
           predictedMonthlyRainfall: mockMatch.predictedRainfall || 75.0,
+          forecast14DayRainfall: 18.5,
           historicalBaseline: mockMatch.historicalNormal || 115.0,
           deviationPct: mockMatch.anomalyPercentage || -10.0,
           drySpellWarning: mockMatch.riskCategory === 'HIGH',
@@ -103,7 +134,10 @@ export const RiskMap = () => {
 
       const results = await Promise.all(promises);
       setDistrictData(results);
-      setSelectedDistrict(results.find(r => r.name === 'Bengaluru Rural') || results[0]);
+
+      // Match with current global selectedLocation or default to Bengaluru Rural
+      const initialMatch = results.find(r => r.name.toLowerCase() === (selectedLocation.district || '').toLowerCase()) || results[0];
+      setActiveDistrict(initialMatch);
     } catch (err) {
       console.error('Failed to load multi-district risk map:', err);
     } finally {
@@ -113,7 +147,19 @@ export const RiskMap = () => {
 
   useEffect(() => {
     fetchAllDistrictRisks();
-  }, [cropFilter]);
+  }, [selectedCrop]);
+
+  // Handle clicking a district on the map or list
+  const handleSelectDistrict = (dist) => {
+    setActiveDistrict(dist);
+    setSelectedLocation(prev => ({
+      ...prev,
+      state: 'Karnataka',
+      district: dist.name,
+      lat: dist.lat,
+      lon: dist.lon
+    }));
+  };
 
   const getPinColor = (category) => {
     switch (category) {
@@ -135,11 +181,14 @@ export const RiskMap = () => {
     ? districtData
     : districtData.filter(d => d.riskCategory === filterRisk);
 
+  // Evaluate crop water intelligence for active district
+  const activeWaterIntel = evaluateCropWaterIntelligence(selectedCrop?.key, activeDistrict);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans">
       
       {/* Header Bar */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl space-y-4">
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl space-y-5">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-4">
           <div>
@@ -151,30 +200,32 @@ export const RiskMap = () => {
               {t('gisHeader')}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {t('gisSub')}
+              {language === 'kn' 
+                ? 'ಕರ್ನಾಟಕದ ಜಿಲ್ಲೆಗಳ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ನೈಜ ಸಮಯದ ಮಳೆ ಅಪಾಯ ಮತ್ತು ಬೆಳೆ ನೀರಿನ ಸ್ಥಿತಿಯನ್ನು ಪರಿಶೀಲಿಸಿ.' 
+                : 'Click any Karnataka district marker to synchronize application context and inspect crop water status.'}
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             <button
               onClick={fetchAllDistrictRisks}
               disabled={loading}
-              className="px-3.5 py-2 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-sky-500 text-xs font-bold flex items-center space-x-2 transition-colors"
+              className="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-sky-500 text-xs font-bold flex items-center space-x-2 transition-colors active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>{loading ? (language === 'kn' ? '18 ಜಿಲ್ಲೆಗಳನ್ನು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...' : 'Querying 18 Districts...') : (language === 'kn' ? 'ಎಲ್ಲಾ ಜಿಲ್ಲೆಗಳನ್ನು ನವೀಕರಿಸಿ' : 'Refresh All Districts')}</span>
+              <span>{loading ? (language === 'kn' ? 'ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...' : 'Querying...') : (language === 'kn' ? 'ನವೀಕರಿಸಿ' : 'Refresh Map')}</span>
             </button>
           </div>
         </div>
 
-        {/* Filter Controls & Spatial Resolution Disclosure */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Filter Controls & Global Crop Selector Strip */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Risk Filter Tabs */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 flex items-center space-x-1">
               <Filter className="w-3.5 h-3.5" />
-              <span>{language === 'kn' ? 'ಫಿಲ್ಟರ್:' : 'Filter:'}</span>
+              <span>{language === 'kn' ? 'ಅಪಾಯ ಹಂತ:' : 'Risk Tier:'}</span>
             </span>
             {[
               { label: t('filterAll'), value: 'ALL' },
@@ -197,10 +248,30 @@ export const RiskMap = () => {
             ))}
           </div>
 
-          {/* Honest Spatial Notice Badge */}
-          <div className="px-3 py-1 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center space-x-1.5">
-            <Info className="w-3.5 h-3.5 shrink-0" />
-            <span>{t('districtCentroidNote')}</span>
+          {/* Quick Crop Selector */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center space-x-1">
+              <Sprout className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{language === 'kn' ? 'ಬೆಳೆ:' : 'Crop:'}</span>
+            </span>
+            <div className="flex items-center space-x-1 overflow-x-auto">
+              {mockCrops.map((c) => {
+                const isSelected = (selectedCrop?.key || 'ragi') === c.key;
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => setSelectedCrop(c)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                      isSelected
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {language === 'kn' ? c.name_kn : c.name.split(' ')[0]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
         </div>
@@ -208,15 +279,15 @@ export const RiskMap = () => {
       </div>
 
       {/* Map & Detail Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left 8 Cols: Leaflet Karnataka Map */}
-        <div className="lg:col-span-8 p-3 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl overflow-hidden relative min-h-[520px]">
+        {/* Left 7 Cols: Leaflet Karnataka Map */}
+        <div className="lg:col-span-7 p-3 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl overflow-hidden relative min-h-[560px]">
           
           <MapContainer 
-            center={[15.3173, 75.7139]} 
+            center={[activeDistrict?.lat || 15.3173, activeDistrict?.lon || 75.7139]} 
             zoom={7} 
-            className="w-full h-full min-h-[500px] rounded-2xl z-0"
+            className="w-full h-full min-h-[540px] rounded-2xl z-0"
             scrollWheelZoom={false}
           >
             <TileLayer
@@ -224,15 +295,21 @@ export const RiskMap = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
+            {activeDistrict && (
+              <MapRecenter lat={activeDistrict.lat} lon={activeDistrict.lon} />
+            )}
+
             {filteredDistricts.map((d) => {
-              const pin = createCustomPin(getPinColor(d.riskCategory));
+              const isSelected = activeDistrict?.id === d.id;
+              const pin = createCustomPin(getPinColor(d.riskCategory), isSelected);
+
               return (
                 <Marker
                   key={d.id}
                   position={[d.lat, d.lon]}
                   icon={pin}
                   eventHandlers={{
-                    click: () => setSelectedDistrict(d)
+                    click: () => handleSelectDistrict(d)
                   }}
                 >
                   <Popup className="custom-leaflet-popup">
@@ -241,6 +318,12 @@ export const RiskMap = () => {
                       <span className="block text-slate-600">Risk: <strong>{d.riskCategory}</strong></span>
                       <span className="block text-slate-600">Rainfall: <strong>{d.predictedMonthlyRainfall.toFixed(1)} mm</strong></span>
                       <span className="block text-slate-500 text-[10px]">Deviation: {d.deviationPct > 0 ? '+' : ''}{d.deviationPct.toFixed(1)}%</span>
+                      <button 
+                        onClick={() => handleSelectDistrict(d)}
+                        className="mt-1 px-2 py-0.5 rounded bg-sky-500 text-white font-bold text-[10px] block w-full text-center"
+                      >
+                        Select District
+                      </button>
                     </div>
                   </Popup>
                 </Marker>
@@ -251,7 +334,7 @@ export const RiskMap = () => {
           {/* Floating Map Legend */}
           <div className="absolute bottom-6 right-6 p-3 rounded-2xl bg-white/95 dark:bg-[#070B19]/95 backdrop-blur border border-slate-200 dark:border-slate-800 text-xs font-bold space-y-1.5 shadow-lg z-[400]">
             <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block pb-1 border-b border-slate-200 dark:border-slate-800">
-              Risk Tiers
+              Risk Classification
             </span>
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
@@ -273,84 +356,149 @@ export const RiskMap = () => {
 
         </div>
 
-        {/* Right 4 Cols: Selected District Intelligence Panel */}
-        <div className="lg:col-span-4 p-6 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl space-y-5 flex flex-col justify-between">
+        {/* Right 5 Cols: Selected District Status Panel */}
+        <div className="lg:col-span-5 p-6 rounded-3xl bg-white dark:bg-[#0B1021]/90 border border-slate-200 dark:border-slate-800/90 shadow-sm dark:shadow-xl space-y-5 flex flex-col justify-between">
           
           <div className="space-y-4">
+            
+            {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-sky-500" />
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                  District Telemetry
+                <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                  District Intelligence Panel
                 </h3>
               </div>
-              {selectedDistrict && (
-                <RiskBadge category={selectedDistrict.riskCategory} />
+              {activeDistrict && (
+                <RiskBadge category={activeDistrict.riskCategory} />
               )}
             </div>
 
-            {selectedDistrict ? (
+            {activeDistrict ? (
               <div className="space-y-4">
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {selectedDistrict.name}
-                  </h2>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    Centroid: {selectedDistrict.lat}° N, {selectedDistrict.lon}° E
+                
+                {/* District Title & Active Crop */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+                      {activeDistrict.name}
+                    </h2>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                      Centroid: {activeDistrict.lat?.toFixed(2)}° N, {activeDistrict.lon?.toFixed(2)}° E
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono">
+                    {selectedCrop?.name?.split(' ')[0] || 'Ragi'}
                   </span>
                 </div>
 
-                {/* Key Numbers */}
-                <div className="grid grid-cols-2 gap-3 font-mono text-xs">
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800">
+                {/* Key Rainfall Numbers */}
+                <div className="grid grid-cols-3 gap-2.5 font-mono text-xs">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 text-center">
                     <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Predicted Rain</span>
-                    <span className="text-lg font-black text-slate-900 dark:text-white block mt-0.5">
-                      {selectedDistrict.predictedMonthlyRainfall.toFixed(1)} mm
+                    <span className="text-base font-black text-slate-900 dark:text-white block mt-0.5">
+                      {activeDistrict.predictedMonthlyRainfall.toFixed(1)} mm
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 text-center">
+                    <span className="text-slate-500 dark:text-slate-400 block text-[10px]">14-Day Forecast</span>
+                    <span className="text-base font-black text-sky-600 dark:text-sky-400 block mt-0.5">
+                      {activeDistrict.forecast14DayRainfall.toFixed(1)} mm
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 text-center">
                     <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Normal Baseline</span>
-                    <span className="text-lg font-black text-slate-900 dark:text-white block mt-0.5">
-                      {selectedDistrict.historicalBaseline.toFixed(1)} mm
+                    <span className="text-base font-black text-slate-900 dark:text-white block mt-0.5">
+                      {activeDistrict.historicalBaseline.toFixed(1)} mm
                     </span>
                   </div>
                 </div>
 
-                {/* Anomaly deviation badge */}
-                <div className={`p-3 rounded-2xl border flex items-center justify-between text-xs font-bold ${
-                  selectedDistrict.deviationPct < -20
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
-                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                {/* Dry Spell & Anomaly Status */}
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
+                  <div className={`p-3 rounded-2xl border flex items-center justify-between font-bold ${
+                    activeDistrict.deviationPct < -20
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                  }`}>
+                    <span className="text-[11px]">Anomaly:</span>
+                    <span className="font-mono">
+                      {activeDistrict.deviationPct > 0 ? '+' : ''}{activeDistrict.deviationPct.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border flex items-center justify-between font-bold ${
+                    activeDistrict.drySpellWarning
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                  }`}>
+                    <span className="text-[11px]">Dry Spell Risk:</span>
+                    <span>{activeDistrict.drySpellWarning ? 'HIGH' : 'LOW'}</span>
+                  </div>
+                </div>
+
+                {/* Crop Water Status Banner */}
+                <div className={`p-4 rounded-2xl border space-y-2 ${
+                  activeWaterIntel.status === 'WATER_DEFICIT'
+                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200'
+                    : activeWaterIntel.status === 'EXCESS_WATER_RISK'
+                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-900 dark:text-blue-200'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
                 }`}>
-                  <div className="flex items-center space-x-1.5">
-                    {selectedDistrict.deviationPct < -20 ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
-                    <span>Seasonal Anomaly</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider opacity-75">
+                      Crop Water Status ({selectedCrop?.name || 'Ragi'})
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full font-black text-[10px] bg-white/80 dark:bg-black/40 border border-current">
+                      {language === 'kn' ? activeWaterIntel.waterStatus_kn : activeWaterIntel.waterStatus}
+                    </span>
                   </div>
-                  <span className="font-mono text-sm">
-                    {selectedDistrict.deviationPct > 0 ? '+' : ''}{selectedDistrict.deviationPct.toFixed(1)}%
+                  <p className="text-xs font-bold leading-relaxed">
+                    {language === 'kn' ? activeWaterIntel.recommendation.action_kn : activeWaterIntel.recommendation.action_en}
+                  </p>
+                </div>
+
+                {/* Recommended Techniques Preview */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                    Key Agronomic Techniques
                   </span>
+                  <ul className="space-y-1 text-slate-700 dark:text-slate-300 text-xs">
+                    {(language === 'kn' ? activeWaterIntel.recommendation.techniques_kn : activeWaterIntel.recommendation.techniques_en).slice(0, 2).map((tech, idx) => (
+                      <li key={idx} className="flex items-center space-x-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="truncate">{tech}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                {/* English & Kannada Advisory Snippets */}
-                <div className="space-y-3 pt-2 text-xs">
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 space-y-1">
-                    <span className="font-bold text-slate-900 dark:text-white block">Advisory (English)</span>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                      "{selectedDistrict.advisory_en}"
-                    </p>
-                  </div>
+                {/* Action Navigation Buttons */}
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="px-3 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-sky-500/20 transition-all active:scale-95"
+                  >
+                    <span>Open Dashboard</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
 
-                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-200 dark:border-slate-800 space-y-1">
-                    <span className="font-bold text-slate-900 dark:text-white block">ಕನ್ನಡ ಸಲಹೆ (Kannada)</span>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                      "{selectedDistrict.advisory_kn}"
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => navigate('/advisory')}
+                    className="px-3 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center space-x-1.5 border border-slate-200 dark:border-slate-700 transition-all active:scale-95"
+                  >
+                    <span>Detailed Advisory</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
                 </div>
+
               </div>
             ) : (
-              <p className="text-xs text-slate-400 text-center py-8">Select a district pin on the map</p>
+              <p className="text-xs text-slate-400 text-center py-8">
+                {language === 'kn' ? 'ನಕ್ಷೆಯಲ್ಲಿ ಯಾವುದೇ ಜಿಲ್ಲೆಯ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ' : 'Select a district pin on the map'}
+              </p>
             )}
           </div>
 

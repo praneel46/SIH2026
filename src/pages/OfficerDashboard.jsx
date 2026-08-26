@@ -5,6 +5,7 @@ import { mockCrops } from '../data/mock/mockCrops';
 import { KARNATAKA_DISTRICTS } from '../data/mock/mockLocations';
 import { CURRENT_CYCLE_INDICES } from '../config/currentCycleIndices';
 import { useLanguage } from '../context/LanguageContext';
+import { useRole } from '../context/RoleContext';
 import { 
   Radio, 
   MapPin, 
@@ -28,8 +29,7 @@ import {
 
 export const OfficerDashboard = () => {
   const { language, t } = useLanguage();
-  const [selectedDistrict, setSelectedDistrict] = useState(KARNATAKA_DISTRICTS[2]); // Bengaluru Rural
-  const [selectedCrop, setSelectedCrop] = useState(mockCrops[0]); // Ragi
+  const { selectedLocation, setSelectedLocation, selectedCrop, setSelectedCrop } = useRole();
   const [ensembleData, setEnsembleData] = useState(null);
   const [historyLogs, setHistoryLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +43,9 @@ export const OfficerDashboard = () => {
     try {
       // 1. Live call to trigger-ensemble-check (GFS/ICON/ECMWF + FAO-56 + DB log)
       const res = await apiService.getEnsembleCheck({
-        latitude: selectedDistrict.lat,
-        longitude: selectedDistrict.lon,
-        crop_type: selectedCrop.key,
+        latitude: selectedLocation.lat || 13.29,
+        longitude: selectedLocation.lon || 77.55,
+        crop_type: selectedCrop?.key || 'ragi',
         dmi: CURRENT_CYCLE_INDICES.dmi,
         oni: CURRENT_CYCLE_INDICES.oni,
         mjo_phase: CURRENT_CYCLE_INDICES.mjo_phase
@@ -68,7 +68,7 @@ export const OfficerDashboard = () => {
     setHistoryLoading(true);
     try {
       const res = await apiService.getPredictionHistory({
-        district: selectedDistrict.name,
+        district: selectedLocation.district,
         limit: 10
       });
       if (res.success && res.data) {
@@ -84,7 +84,7 @@ export const OfficerDashboard = () => {
   useEffect(() => {
     fetchOfficerData();
     fetchHistoryLogs();
-  }, [selectedDistrict, selectedCrop]);
+  }, [selectedLocation, selectedCrop]);
 
   const handleCopyBulletin = () => {
     if (!ensembleData) return;
@@ -147,15 +147,22 @@ Advisory (KN): ${ensembleData.agronomic_advisory?.advisory_kn}`;
               <span>District Target Jurisdiction</span>
             </label>
             <select
-              value={selectedDistrict.id}
+              value={selectedLocation.district}
               onChange={(e) => {
-                const d = KARNATAKA_DISTRICTS.find(x => x.id === e.target.value);
-                if (d) setSelectedDistrict(d);
+                const d = KARNATAKA_DISTRICTS.find(x => x.name === e.target.value || x.id === e.target.value);
+                if (d) {
+                  setSelectedLocation(prev => ({
+                    ...prev,
+                    district: d.name,
+                    lat: d.lat,
+                    lon: d.lon
+                  }));
+                }
               }}
               className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#070B19] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-sky-500"
             >
               {KARNATAKA_DISTRICTS.map((d) => (
-                <option key={d.id} value={d.id}>
+                <option key={d.id} value={d.name}>
                   {d.name} ({d.lat}° N, {d.lon}° E)
                 </option>
               ))}
@@ -168,7 +175,7 @@ Advisory (KN): ${ensembleData.agronomic_advisory?.advisory_kn}`;
               <span>Target Kharif Crop (FAO-56)</span>
             </label>
             <select
-              value={selectedCrop.key}
+              value={selectedCrop?.key || 'ragi'}
               onChange={(e) => {
                 const c = mockCrops.find(x => x.key === e.target.value);
                 if (c) setSelectedCrop(c);
