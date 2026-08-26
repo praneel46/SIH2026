@@ -169,19 +169,19 @@ export const apiService = {
   // 5B. EVALUATE PREDICTION (FARMER & DASHBOARD AGGREGATION)
   // Calls POST /api/v1/predict-monsoon
   // ==========================================================
-  async evaluatePrediction(inputFeatures) {
-    try {
-      const payload = {
-        latitude: Number(inputFeatures.latitude ?? 13.29),
-        longitude: Number(inputFeatures.longitude ?? 77.55),
-        month: Number(inputFeatures.month ?? (new Date().getMonth() + 1)),
-        crop_type: inputFeatures.crop_type ?? inputFeatures.cropType ?? 'ragi',
-        dmi: Number(inputFeatures.dmi ?? 0),
-        oni: Number(inputFeatures.oni ?? 0),
-        mjo_phase: Number(inputFeatures.mjo_phase ?? inputFeatures.mjoPhase ?? 1),
-        mjo_amplitude: Number(inputFeatures.mjo_amplitude ?? inputFeatures.mjoAmplitude ?? 1)
-      };
+  async evaluatePrediction(inputFeatures = {}) {
+    const payload = {
+      latitude: Number(inputFeatures.latitude ?? 13.29),
+      longitude: Number(inputFeatures.longitude ?? 77.55),
+      month: Number(inputFeatures.month ?? (new Date().getMonth() + 1)),
+      crop_type: inputFeatures.crop_type ?? inputFeatures.cropType ?? 'ragi',
+      dmi: Number(inputFeatures.dmi ?? 0),
+      oni: Number(inputFeatures.oni ?? 0),
+      mjo_phase: Number(inputFeatures.mjo_phase ?? inputFeatures.mjoPhase ?? 1),
+      mjo_amplitude: Number(inputFeatures.mjo_amplitude ?? inputFeatures.mjoAmplitude ?? 1)
+    };
 
+    try {
       const response = await fetch(`${API_BASE_URL}/predict-monsoon`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -354,7 +354,7 @@ export const apiService = {
         advisory: {
           cropType: cropType,
           english: `For ${cropType} in ${loc.name}: Maintain field bunds and prepare moisture conservation practices.`,
-          kannada: `${loc.name} నల్లి ${cropName} బెళెగె మట్టి తేవాంశవన్ను నిరంతరవాగి పరిశీలిసి.`
+          kannada: `${loc.name} ನಲ್ಲಿ ${cropType} ಬೆಳೆಗೆ ಮಣ್ಣಿನ ತೇವಾಂಶವನ್ನು ನಿರಂತರವಾಗಿ ಪರಿಶೀಲಿಸಿ.`
         }
       };
     }
